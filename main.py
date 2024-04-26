@@ -87,6 +87,8 @@ PREDEFINED_TOKENS = {
 
 async def start(update, context):
     username = update.message.from_user.first_name
+    user_language_from_telegram_options = update.effective_user.language_code
+    context.user_date["language"] = user_language_from_telegram_options
     context.user_data["name"] = username
     await update.message.reply_text(
         await main_menu_message(username), reply_markup=await main_menu_keyboard()
