@@ -138,13 +138,10 @@ async def blockchain_selection(update, context):
 
 
 async def prompt_wallet_address_input(update, context, selected_blockchain):
-    address_prompt = {
-        "btc": "Please enter a BTC wallet address:",
-        "theta": "Please enter a Theta wallet address:",
-        "eth": "Please enter an ETH wallet address:",
-    }.get(selected_blockchain.lower())
+    selected_blockchain = selected_blockchain.upper()
+    text = f"Please enter any {selected_blockchain} wallet address:"
     await context.bot.send_message(
-        chat_id=update.callback_query.message.chat_id, text=address_prompt
+        chat_id=update.callback_query.message.chat_id, text=text
     )
 
 
@@ -152,10 +149,10 @@ async def prompt_wallet_address_input(update, context, selected_blockchain):
 async def handle_messages(update, context):
     if context.user_data.get("is_entering_wallet_name", False):
         await handle_wallet_name(update, context)
-    elif context.user_data.get("is_entering_contract_address", False):
-        await handle_contract_address(update, context)
     elif context.user_data.get("is_entering_trigger_point", False):
         await handle_trigger_point(update, context)
+    elif context.user_data.get("is_entering_contract_address", False):
+        await handle_contract_address(update, context)
     else:
         await handle_wallet_address(update, context)
 
@@ -320,8 +317,39 @@ async def handle_trigger_point(update, context):
             )
             return  # Stop further execution if the trigger point is invalid
 
-    # Print the entire user data
+    # Remove the is_entering_trigger_point flag after successfully storing the trigger point
+    context.user_data.pop("is_entering_trigger_point", None)
+
+    # Prompt the user with the saved setup
+    await prompt_tracked_wallet(context)
     print(context.user_data)
+
+
+# COMPLETED:
+
+
+async def prompt_tracked_wallet(context):
+    blockchain = context.user_data.get("blockchain")
+    wallet_address = context.user_data.get("wallet_address")
+    wallet_name = context.user_data.get("wallet_name")
+    symbol = context.user_data.get("selected_symbol")
+    contract_address = context.user_data.get("contract_address")
+    trigger_point = context.user_data.get("trigger_point")
+
+    message = f"Tracked wallet setup:\n\n"
+    message += f"Wallet Name: {wallet_name}\n"
+    message += f"Blockchain: {blockchain}\n"
+    message += f"Wallet Address: {wallet_address}\n"
+    message += f"Token Symbol: {symbol}\n"
+    if contract_address is not None:
+        message += f"Contract Address: {contract_address}\n"
+    message += f"Trigger Point: {trigger_point}"
+
+    await context.bot.send_message(
+        chat_id=context.user_data["chat_id"],
+        text=message,
+        reply_markup=await back_to_to_main_keyboard(),
+    )
 
 
 ############################ Settings Menus ####################################
