@@ -88,7 +88,7 @@ PREDEFINED_TOKENS = {
 async def start(update, context):
     username = update.message.from_user.first_name
     user_language_from_telegram_options = update.effective_user.language_code
-    context.user_date["language"] = user_language_from_telegram_options
+    context.user_data["language"] = user_language_from_telegram_options
     context.user_data["name"] = username
     await update.message.reply_text(
         await main_menu_message(username), reply_markup=await main_menu_keyboard()
@@ -99,7 +99,7 @@ async def main_menu(update, context):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await main_menu_message(context.user_data["name"]),
+        text=await main_menu_message(query.from_user.first_name),
         reply_markup=await main_menu_keyboard(),
     )
 
@@ -233,7 +233,7 @@ async def handle_selected_token(update, context):
 
     if selected_token.lower() == "other":
         await context.bot.send_message(
-            chat_id=context.user_data["chat_id"],
+            chat_id=update.callback_query.message.chat_id,
             text="Please enter the contract address",
         )
         # Set a flag in user_data to indicate that we are waiting for the contract address
@@ -254,7 +254,19 @@ async def handle_selected_token(update, context):
             context.user_data["selected_symbol"] = selected_symbol
             context.user_data["contract_address"] = contract_address
 
-            await prompt_trigger_point(update, context)
+            # Check if the selected blockchain is Theta and the selected token is "Stake Watch"
+            if (
+                selected_blockchain == "theta"
+                and selected_symbol.lower() == "stake watch"
+            ):
+                await context.bot.send_message(
+                    chat_id=update.callback_query.message.chat_id,
+                    text=await stake_message(),
+                    reply_markup=await back_to_to_main_keyboard(),
+                )
+            else:
+                # Proceed with trigger point prompt
+                await prompt_trigger_point(update, context)
         else:
             await query.answer("Invalid selection")
 

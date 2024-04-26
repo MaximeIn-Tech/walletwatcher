@@ -20,18 +20,19 @@ async def settings_message():
 
 
 async def help_message():
-    return """The bot is listening to your queries and stores your data in a database.
-
-An important thing for me is to keep users anonymous so the only thing that is kept is your Chat_ID with the bot.
-In that, he will know who to send messages to and not mix up the data from everyone.
-
-Other than that, the bot doesn't log:
-    - Your IP
-    - Your username
-    - Any other information that would identify you as a user.
+    return """The bot attentively processes your inquiries and securely stores your data within a database. 
+    
+Maintaining user anonymity is paramount; hence, only your Chat_ID is retained, ensuring precise message delivery without intertwining data from various users. 
+    
+Additionally, the bot refrains from logging your IP, username, or any other details that could potentially identify you as a user.
 """
 
 
 async def language_selection_message():
     return """Please choose a language you prefer:
+    """
+
+
+async def stake_message():
+    return """Stakes on this wallet are being watched. You'll be notified if a stake is withdrawn.
     """
