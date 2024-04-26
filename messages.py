@@ -1,5 +1,5 @@
-async def main_menu_message():
-    return """🚀 Welcome to Crypto Wallet Monitor, crafted with care by @TechSherpa!
+async def main_menu_message(username):
+    return f"""🚀 Welcome to Crypto Wallet Monitor {username}, crafted with care by @TechSherpa!
 
 Ready to stay in the loop with real-time alerts whenever transactions occur in your crypto wallets? Let's get started!
 
