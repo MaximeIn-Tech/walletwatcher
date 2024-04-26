@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class wallet:
-    id: int
     wallet_name: str
     wallet_address: str
     contract_address: str
@@ -11,3 +10,4 @@ class wallet:
     trigger: float
     balance: float
     stake: bool
+    user_id: int
