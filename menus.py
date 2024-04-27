@@ -21,8 +21,18 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton("❓ Aide", callback_data="help_menu"),
     ]
 
+    spanish_options = [
+        InlineKeyboardButton("🚀 Seguir", callback_data="track_menu"),
+        InlineKeyboardButton("❌ Dejar de seguir", callback_data="remove_wallet_menu"),
+        InlineKeyboardButton("📋 Carteras", callback_data="list_wallets"),
+        InlineKeyboardButton("⚙️ Configuración", callback_data="settings_menu"),
+        InlineKeyboardButton("❓ Ayuda", callback_data="help_menu"),
+    ]
+
     if user_language == "fr":
         buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
     else:
         buttons = english_options
 
@@ -47,8 +57,14 @@ async def back_to_to_main_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
+    spanish_options = [
+        InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
+    ]
+
     if user_language == "fr":
         buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
     else:
         buttons = english_options
 
@@ -78,8 +94,15 @@ async def settings_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
+    spanish_options = [
+        InlineKeyboardButton("🌏 Idioma", callback_data="language_menu"),
+        InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
+    ]
+
     if user_language == "fr":
         buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
     else:
         buttons = english_options
 
@@ -99,6 +122,7 @@ async def language_keyboard(user_language: str) -> InlineKeyboardMarkup:
     english_options = [
         InlineKeyboardButton("🏴󠁧󠁢󠁥󠁮󠁧󠁿 English", callback_data="en"),
         InlineKeyboardButton("🇫🇷 French", callback_data="fr"),
+        InlineKeyboardButton("🇫🇷 Spanish", callback_data="es"),
         InlineKeyboardButton("🔙", callback_data="settings_menu"),
         InlineKeyboardButton("🏠 Main menu", callback_data="main"),
     ]
@@ -106,12 +130,23 @@ async def language_keyboard(user_language: str) -> InlineKeyboardMarkup:
     french_options = [
         InlineKeyboardButton("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anglais", callback_data="en"),
         InlineKeyboardButton("🇫🇷 Français", callback_data="fr"),
+        InlineKeyboardButton("🇫🇷 Espagnol", callback_data="es"),
         InlineKeyboardButton("🔙", callback_data="settings_menu"),
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
+    spanish_options = [
+        InlineKeyboardButton("🏴 Inglés", callback_data="en"),
+        InlineKeyboardButton("🇫🇷 Francés", callback_data="fr"),
+        InlineKeyboardButton("🇪🇸 Español", callback_data="es"),
+        InlineKeyboardButton("🔙", callback_data="settings_menu"),
+        InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
+    ]
+
     if user_language == "fr":
         buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
     else:
         buttons = english_options
 
@@ -160,8 +195,15 @@ async def naming_wallet_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton("Non", callback_data="no"),
     ]
 
+    spanish_options = [
+        InlineKeyboardButton("Sí", callback_data="yes"),
+        InlineKeyboardButton("No", callback_data="no"),
+    ]
+
     if user_language == "fr":
         buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
     else:
         buttons = english_options
 
