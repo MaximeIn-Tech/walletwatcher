@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class wallet:
+class Wallet:
     wallet_name: str
     wallet_address: str
     contract_address: str
