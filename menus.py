@@ -136,7 +136,7 @@ async def language_keyboard(user_language: str) -> InlineKeyboardMarkup:
     ]
 
     spanish_options = [
-        InlineKeyboardButton("🏴 Inglés", callback_data="en"),
+        InlineKeyboardButton("🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglés", callback_data="en"),
         InlineKeyboardButton("🇫🇷 Francés", callback_data="fr"),
         InlineKeyboardButton("🇪🇸 Español", callback_data="es"),
         InlineKeyboardButton("🔙", callback_data="settings_menu"),
