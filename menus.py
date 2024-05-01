@@ -86,16 +86,19 @@ async def settings_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
 
     english_options = [
         InlineKeyboardButton("🌏 Language", callback_data="language_menu"),
+        InlineKeyboardButton("💳 Subscriptions", callback_data="subscriptions_menu"),
         InlineKeyboardButton("🏠 Main menu", callback_data="main"),
     ]
 
     french_options = [
         InlineKeyboardButton("🌏 Langue", callback_data="language_menu"),
+        InlineKeyboardButton("💳 Abonnements", callback_data="subscriptions_menu"),
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
     spanish_options = [
         InlineKeyboardButton("🌏 Idioma", callback_data="language_menu"),
+        InlineKeyboardButton("💳 Suscripciones", callback_data="subscriptions_menu"),
         InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
     ]
 
@@ -122,7 +125,7 @@ async def language_keyboard(user_language: str) -> InlineKeyboardMarkup:
     english_options = [
         InlineKeyboardButton("🏴󠁧󠁢󠁥󠁮󠁧󠁿 English", callback_data="en"),
         InlineKeyboardButton("🇫🇷 French", callback_data="fr"),
-        InlineKeyboardButton("🇪🇸", callback_data="es"),
+        InlineKeyboardButton("🇪🇸 Spanish", callback_data="es"),
         InlineKeyboardButton("🔙", callback_data="settings_menu"),
         InlineKeyboardButton("🏠 Main menu", callback_data="main"),
     ]
