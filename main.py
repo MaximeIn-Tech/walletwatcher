@@ -16,6 +16,7 @@ from telegram.ext import (
     filters,
 )
 
+from database import connect_to_database
 from menus import *
 from messages import *
 
@@ -37,6 +38,7 @@ logger = logging.getLogger(__name__)
 # Import the token and connect to the bot
 token = os.getenv("TELEGRAM_BOT_TOKEN")
 
+supabase = connect_to_database()
 
 ############################ Expressions #######################################
 
@@ -86,16 +88,45 @@ PREDEFINED_TOKENS = {
 
 
 async def start(update, context):
-    context.user_data["language"] = update.effective_user.language_code
-    print(context.user_data["language"])
-    context.user_data["name"] = update.message.from_user.first_name
-    # TODO: Add the user_id and language to the user table. Check if the user exists first and do not add it if it does. If it doesn't add it to the table.
-    await update.message.reply_text(
-        await main_menu_message(
-            context.user_data["name"], context.user_data["language"]
-        ),
-        reply_markup=await main_menu_keyboard(context.user_data["language"]),
-    )
+    try:
+        context.user_data["chat_id"] = update.effective_chat.id
+        context.user_data["language"] = update.effective_user.language_code
+        context.user_data["name"] = update.message.from_user.first_name
+        print(context.user_data["chat_id"])
+        # Check if the user already exists in the Users table
+        existing_user = (
+            supabase.table("Users")
+            .select("*")
+            .eq("chat_id", context.user_data["chat_id"])
+            .execute()
+        )
+        print(existing_user)
+
+        if not existing_user.data:
+            # User does not exist, insert new record
+            data = (
+                supabase.table("Users")
+                .insert(
+                    {
+                        "chat_id": context.user_data["chat_id"],
+                        "language": context.user_data["language"],
+                    }
+                )
+                .execute()
+            )
+            print("User added")
+        else:
+            print("User already exists")
+
+        # Reply to the user
+        await update.message.reply_text(
+            await main_menu_message(
+                context.user_data["name"], context.user_data["language"]
+            ),
+            reply_markup=await main_menu_keyboard(context.user_data["language"]),
+        )
+    except Exception as e:
+        print("An error occurred:", e)
 
 
 async def main_menu(update, context):
@@ -374,6 +405,49 @@ async def prompt_tracked_wallet(context):
     symbol = context.user_data.get("selected_symbol")
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
+    print(type(trigger_point))
+
+    # Check if the wallet exists
+    existing_wallets = (
+        supabase.table("Wallets")
+        .select()
+        .eq("chat_id", context.user_data["chat_id"])
+        .eq("wallet_address", wallet_address)
+        .execute()
+    )
+    print(existing_wallets)
+
+    if not existing_wallets.data:
+        # Wallet does not exist, insert new record
+        data = (
+            supabase.table("Wallets")
+            .insert(
+                {
+                    "chat_id": context.user_data["chat_id"],
+                    "wallet_name": wallet_name,
+                    "wallet_address": wallet_address,
+                }
+            )
+            .execute()
+        )
+        print("Wallet added")
+    else:
+        print("Wallet already exists")
+
+    # data = (
+    #     supabase.table("Contracts")
+    #     .insert(
+    #         {
+    #             "wallet_address": wallet_address,
+    #             "blockchain": blockchain,
+    #             "contract_address": contract_address,
+    #             "token_symbol": symbol,
+    #             "trigger_point": trigger_point,
+    #             "balance": None,
+    #         }
+    #     )
+    #     .execute()
+    # )
 
     message = await tracked_wallet_setup_message(
         wallet_name,
