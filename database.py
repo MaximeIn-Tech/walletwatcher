@@ -1,7 +1,5 @@
 """
 NOTE : This file is here to handle all the database interaction.
-TODO: I need to create a way to connect to the DB, add a user, fetch a user info, add a wallet, fetch the data from the wallet tables, add a contract and fetch the contract table.
-TODO : Add the keys of the database to the .env file
 """
 
 import os
@@ -23,3 +21,26 @@ def connect_to_database():
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_KEY")
     return create_client(url, key)
+
+
+async def get_language_for_chat_id(chat_id):
+    supabase = connect_to_database()
+    try:
+        # Query the Users table for the language with the specified chat_id
+        user_response = (
+            supabase.table("Users")
+            .select("language")
+            .eq("chat_id", chat_id)
+            .limit(1)  # Limit to one result since chat_id should be unique
+            .execute()
+        )
+
+        # If there is data for the specified chat_id, return the language
+        if user_response.data:
+            language = user_response.data
+            language = language[0]["language"]
+            return language
+            return None  # Return None if no data found for the chat_id
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors

@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from database import connect_to_database
+from database import *
 from menus import *
 from messages import *
 
@@ -88,9 +88,10 @@ PREDEFINED_TOKENS = {
 
 
 async def start(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     try:
         context.user_data["chat_id"] = update.effective_chat.id
-        context.user_data["language"] = update.effective_user.language_code
+        context.user_data["language"] = language
         context.user_data["name"] = update.message.from_user.first_name
         print(context.user_data["chat_id"])
         # Check if the user already exists in the Users table
@@ -104,7 +105,7 @@ async def start(update, context):
 
         if not existing_user.data:
             # User does not exist, insert new record
-            data = (
+            data, count = (
                 supabase.table("Users")
                 .insert(
                     {
@@ -120,39 +121,37 @@ async def start(update, context):
 
         # Reply to the user
         await update.message.reply_text(
-            await main_menu_message(
-                context.user_data["name"], context.user_data["language"]
-            ),
-            reply_markup=await main_menu_keyboard(context.user_data["language"]),
+            await main_menu_message(context.user_data["name"], language),
+            reply_markup=await main_menu_keyboard(language),
         )
     except Exception as e:
         print("An error occurred:", e)
 
 
 async def main_menu(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    print(language)
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await main_menu_message(
-            query.from_user.first_name, context.user_data["language"]
-        ),
-        reply_markup=await main_menu_keyboard(context.user_data["language"]),
+        text=await main_menu_message(query.from_user.first_name, language),
+        reply_markup=await main_menu_keyboard(language),
     )
 
 
 async def help(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await help_message(context.user_data["language"]),
-        reply_markup=await back_to_to_main_keyboard(context.user_data["language"]),
+        text=await help_message(language),
+        reply_markup=await back_to_to_main_keyboard(language),
     )
 
 
 ############################ Add Track #########################################
 """
 TODO: 
-- Need to add the wallet information to the wallet table (name and address) and the contracts information at the end of the interaction.
 - Show a menu when the user clicks on "Track" that shows all the wallets that are in the database for that user. If there is none, don't ask for that menu. If there are wallets, also add a button to add a new wallet (and watch).
 - The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
 - Maybe add a delete all button too with a confirmation.
@@ -161,12 +160,13 @@ TODO:
 
 # STEP 1 : Handle blockchain selection
 async def track_sub_menu_1(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     context.user_data["chat_id"] = query.message.chat_id
     await query.answer()
     await context.bot.send_message(
         chat_id=query.message.chat_id,
-        text=await blockchain_choice_message(context.user_data["language"]),
+        text=await blockchain_choice_message(language),
         reply_markup=await blockchain_keyboard(),
     )
 
@@ -183,10 +183,9 @@ async def blockchain_selection(update, context):
 
 
 async def prompt_wallet_address_input(update, context, selected_blockchain):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     selected_blockchain = selected_blockchain.upper()
-    text = await address_choice_message(
-        context.user_data["language"], selected_blockchain
-    )
+    text = await address_choice_message(language, selected_blockchain)
     await context.bot.send_message(
         chat_id=update.callback_query.message.chat_id, text=text
     )
@@ -206,6 +205,7 @@ async def handle_messages(update, context):
 
 # STEP 3 : Name the wallet.
 async def naming_wallet_selection(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     selected_option = query.data
     await query.answer()
@@ -214,7 +214,7 @@ async def naming_wallet_selection(update, context):
         context.user_data["is_entering_wallet_name"] = True
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await naming_wallet(context.user_data["language"]),
+            text=await naming_wallet(language),
         )
 
     elif selected_option == "no":
@@ -226,6 +226,7 @@ async def naming_wallet_selection(update, context):
 
 
 async def handle_wallet_address(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     wallet_address = update.message.text
 
     # Check if the wallet address matches the pattern
@@ -234,15 +235,13 @@ async def handle_wallet_address(update, context):
         context.user_data["wallet_address"] = wallet_address
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await address_confirmation_message(
-                context.user_data["language"], wallet_address
-            ),
-            reply_markup=await naming_wallet_keyboard(context.user_data["language"]),
+            text=await address_confirmation_message(language, wallet_address),
+            reply_markup=await naming_wallet_keyboard(language),
         )
     else:
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await wallet_address_error(context.user_data["language"]),
+            text=await wallet_address_error(language),
         )
 
 
@@ -257,6 +256,7 @@ async def handle_wallet_name(update, context):
 
 # STEP 4:
 async def select_token_symbol(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     selected_blockchain = context.user_data.get("blockchain", "").lower()
     predefined_tokens = PREDEFINED_TOKENS.get(selected_blockchain, [])
     keyboard = [
@@ -267,12 +267,13 @@ async def select_token_symbol(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_message(
         chat_id=context.user_data["chat_id"],
-        text=await token_symbol_choice(context.user_data["language"]),
+        text=await token_symbol_choice(language),
         reply_markup=reply_markup,
     )
 
 
 async def handle_selected_token(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     selected_token = query.data.split("_")[0]  # Extract selected token symbol
     selected_blockchain = context.user_data.get("blockchain", "").lower()
@@ -281,7 +282,7 @@ async def handle_selected_token(update, context):
     if selected_token.lower() == "other":
         await context.bot.send_message(
             chat_id=update.callback_query.message.chat_id,
-            text=await contract_address_selection(context.user_data["language"]),
+            text=await contract_address_selection(language),
         )
         # Set a flag in user_data to indicate that we are waiting for the contract address
         context.user_data["is_entering_contract_address"] = True
@@ -308,10 +309,8 @@ async def handle_selected_token(update, context):
             ):
                 await context.bot.send_message(
                     chat_id=update.callback_query.message.chat_id,
-                    text=await stake_message(context.user_data["language"]),
-                    reply_markup=await back_to_to_main_keyboard(
-                        context.user_data["language"]
-                    ),
+                    text=await stake_message(language),
+                    reply_markup=await back_to_to_main_keyboard(language),
                 )
             else:
                 # Proceed with trigger point prompt
@@ -321,6 +320,7 @@ async def handle_selected_token(update, context):
 
 
 async def handle_contract_address(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     contract_address = update.message.text
 
     # Check if the contract address matches the pattern
@@ -329,24 +329,23 @@ async def handle_contract_address(update, context):
         context.user_data["contract_address"] = contract_address
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await custom_contract_address(
-                context.user_data["language"], contract_address
-            ),
+            text=await custom_contract_address(language, contract_address),
         )
         await prompt_trigger_point(update, context)
     else:
         # Send a message informing the user that the entered contract address is invalid
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await contract_address_error(context.user_data["language"]),
+            text=await contract_address_error(language),
         )
 
 
 # STEP 6: TRIGGER POINT
 async def prompt_trigger_point(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     await context.bot.send_message(
         chat_id=context.user_data["chat_id"],
-        text=await trigger_point_selection(context.user_data["language"]),
+        text=await trigger_point_selection(language),
         parse_mode="HTML",
     )
     context.user_data["is_entering_trigger_point"] = True
@@ -354,6 +353,7 @@ async def prompt_trigger_point(update, context):
 
 async def handle_trigger_point(update, context):
     trigger_point = update.message.text
+    language = await get_language_for_chat_id(update.effective_chat.id)
 
     try:
         # Try converting the input to a float
@@ -362,9 +362,7 @@ async def handle_trigger_point(update, context):
         context.user_data["trigger_point"] = trigger_point_float
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
-            text=await trigger_point_saved(
-                context.user_data["language"], trigger_point_float
-            ),
+            text=await trigger_point_saved(language, trigger_point_float),
         )
     except ValueError:
         try:
@@ -374,15 +372,13 @@ async def handle_trigger_point(update, context):
             context.user_data["trigger_point"] = trigger_point_int
             await context.bot.send_message(
                 chat_id=context.user_data["chat_id"],
-                text=await trigger_point_saved(
-                    context.user_data["language"], trigger_point_int
-                ),
+                text=await trigger_point_saved(language, trigger_point_int),
             )
         except ValueError:
             # Send a message informing the user that the entered trigger point is invalid
             await context.bot.send_message(
                 chat_id=context.user_data["chat_id"],
-                text=await trigger_point_error(context.user_data["language"]),
+                text=await trigger_point_error(language),
             )
             return  # Stop further execution if the trigger point is invalid
 
@@ -470,20 +466,22 @@ async def prompt_tracked_wallet(context):
 
 
 async def settings_menu(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await settings_message(context.user_data["language"]),
-        reply_markup=await settings_menu_keyboard(context.user_data["language"]),
+        text=await settings_message(language),
+        reply_markup=await settings_menu_keyboard(language),
     )
 
 
 async def language_selection_menu(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await language_selection_message(context.user_data["language"]),
-        reply_markup=await language_keyboard(context.user_data["language"]),
+        text=await language_selection_message(language),
+        reply_markup=await language_keyboard(language),
     )
 
 
