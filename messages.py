@@ -101,9 +101,7 @@ async def address_confirmation_message(user_language: str, wallet_address: str):
     elif user_language == "es":
         return f"Tu dirección de monedero es {wallet_address}.\n¿Te gustaría darle un nombre a esta dirección?"
     else:
-        return (
-            f"Your wallet address is {wallet_address}.\nWould you like to name that address?",
-        )
+        return f"Your wallet address is {wallet_address}.\n Would you like to name that address?"
 
 
 async def wallet_address_error(user_language: str):
