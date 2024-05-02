@@ -89,6 +89,7 @@ async def start(update, context):
     context.user_data["language"] = update.effective_user.language_code
     print(context.user_data["language"])
     context.user_data["name"] = update.message.from_user.first_name
+    # TODO: Add the user_id and language to the user table. Check if the user exists first and do not add it if it does. If it doesn't add it to the table.
     await update.message.reply_text(
         await main_menu_message(
             context.user_data["name"], context.user_data["language"]
@@ -118,6 +119,13 @@ async def help(update, context):
 
 
 ############################ Add Track #########################################
+"""
+TODO: 
+- Need to add the wallet information to the wallet table (name and address) and the contracts information at the end of the interaction.
+- Show a menu when the user clicks on "Track" that shows all the wallets that are in the database for that user. If there is none, don't ask for that menu. If there are wallets, also add a button to add a new wallet (and watch).
+- The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
+- Maybe add a delete all button too with a confirmation.
+"""
 
 
 # STEP 1 : Handle blockchain selection
