@@ -230,7 +230,18 @@ TODO:
 
 
 # STEP 1 : Handle blockchain selection
-async def track_sub_menu_1(update, context):
+# async def track_sub_menu_1(update, context):
+#     language = await get_language_for_chat_id(update.effective_chat.id)
+#     query = update.callback_query
+#     context.user_data["chat_id"] = query.message.chat_id
+#     await query.answer()
+#     await context.bot.send_message(
+#         chat_id=query.message.chat_id,
+#         text=await blockchain_choice_message(language),
+#         reply_markup=await blockchain_keyboard(),
+#     )
+
+async def add_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     context.user_data["chat_id"] = query.message.chat_id
@@ -241,6 +252,72 @@ async def track_sub_menu_1(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
+async def track_sub_menu_1(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    context.user_data["chat_id"] = query.message.chat_id
+    
+    # Fetch wallets associated with the user from the database
+    user_wallets = await fetch_wallets_user(context.user_data["chat_id"])
+
+    if user_wallets.count > 0:
+        # User has existing wallets, display them in a menu
+        wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
+        buttons = []
+
+        # Generate buttons two by two
+        for i in range(0, len(wallets_data), 2):
+            row = []
+            for j in range(2):
+                if i + j < len(wallets_data):
+                    wallet = wallets_data[i + j]
+                    row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
+            buttons.append(row)
+
+        buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
+
+        reply_markup = InlineKeyboardMarkup(buttons)
+
+        await query.answer()
+        await query.edit_message_text(
+            text=await wallets_found_track(language),
+            reply_markup=reply_markup,
+        )
+    else:
+        # If user doesn't have any wallets, prompt them to add a new wallet
+        await query.answer()
+        await query.edit_message_text(
+            text=await blockchain_choice_message(language),
+            reply_markup=await blockchain_keyboard(language),
+        )
+
+async def handle_wallet_selection_for_add(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    wallet_address = query.data.split("_")[2]
+    # Fetch the wallet name associated with the selected wallet address
+    wallet_response = await fetch_wallet_address(wallet_address)
+    if wallet_response.data:
+        wallet_data = wallet_response.data[0]
+        wallet_name = wallet_data["wallet_name"]
+    else:
+        # Handle the case where wallet data is not found
+        wallet_name = "Unknown Wallet"
+
+    # Store the selected wallet address and name in the user data
+    context.user_data["wallet_address"] = wallet_address
+    context.user_data["wallet_name"] = wallet_name
+
+    # Proceed with the new track creation process
+    # You can prompt the user for additional information or proceed accordingly
+    await query.answer()
+    await context.bot.send_message(
+        chat_id=query.message.chat_id,
+        text=await blockchain_choice_message(language),
+        reply_markup=await blockchain_keyboard(),
+    )
+
+
 
 async def blockchain_selection(update, context):
     query = update.callback_query
@@ -250,7 +327,11 @@ async def blockchain_selection(update, context):
     context.user_data["blockchain"] = selected_blockchain
     # Remember the selected blockchain or perform any other action
     await query.answer(text=f"You selected {selected_blockchain}")
-    await prompt_wallet_address_input(update, context, selected_blockchain)
+    
+    if "wallet_address" in context.user_data:
+        await naming_wallet_selection(update, context)
+    else:
+        await prompt_wallet_address_input(update, context, selected_blockchain)
 
 
 async def prompt_wallet_address_input(update, context, selected_blockchain):
@@ -281,19 +362,20 @@ async def naming_wallet_selection(update, context):
     selected_option = query.data
     await query.answer()
 
-    if selected_option == "yes":
-        context.user_data["is_entering_wallet_name"] = True
-        await context.bot.send_message(
-            chat_id=context.user_data["chat_id"],
-            text=await naming_wallet(language),
-        )
-
-    elif selected_option == "no":
-        context.user_data["wallet_name"] = "None"
+    if "wallet_name" in context.user_data:
         await select_token_symbol(update, context)
+    else:
+        if selected_option == "yes":
+            context.user_data["is_entering_wallet_name"] = True
+            await context.bot.send_message(
+                chat_id=context.user_data["chat_id"],
+                text=await naming_wallet(language),
+            )
+        elif selected_option == "no":
+            context.user_data["wallet_name"] = "None"
+            await select_token_symbol(update, context)
 
-    elif selected_option == "main":
-        await main_menu(update, context)
+    
 
 
 async def handle_wallet_address(update, context):
@@ -596,13 +678,20 @@ if __name__ == "__main__":
 )
 
 
+
     ############################ Add Track Handlers ############################
     application.add_handler(
         CallbackQueryHandler(track_sub_menu_1, pattern="track_menu")
     )
     application.add_handler(
+        CallbackQueryHandler(add_wallet, pattern="add_new_wallet")
+    )
+    application.add_handler(
         CallbackQueryHandler(blockchain_selection, pattern=r"^(theta|bsc|eth)$")
     )
+    application.add_handler(
+    CallbackQueryHandler(handle_wallet_selection_for_add, pattern=r"add_wallet_")
+)
 
     ############################ Setting Handlers ##############################
     application.add_handler(

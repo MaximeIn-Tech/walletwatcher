@@ -64,6 +64,24 @@ async def fetch_wallets_user(chat_id):
         return None  # Return None in case of any errors
 
 
+async def fetch_wallet_address(wallet_address):
+    supabase = connect_to_database()
+    try:
+        wallet_number = (
+            supabase.table("Wallets")
+            .select("*", count="exact")
+            .eq("wallet_address", wallet_address)
+            .execute()
+        )
+
+        if wallet_number:
+            return wallet_number
+            return None  # Return None if no data found for the chat_id
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
+
+
 async def fetch_contract_user(chat_id):
     supabase = connect_to_database()
     try:

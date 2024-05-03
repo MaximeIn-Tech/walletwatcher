@@ -34,24 +34,23 @@ async def help_message(user_language: str):
     if user_language == "fr":
         return """Le bot prend soin de vos demandes et stocke vos données en toute sécurité dans une base de données.
 
-Nous accordons une grande importance à la protection de votre anonymat. Seul votre Chat_ID est conservé, ce qui garantit que les messages vous parviennent précisément sans mélanger les données des autres utilisateurs.
+Une grande importance est accordée à la protection de votre anonymat. Seul votre Chat_ID est conservé, garantissant ainsi que les messages vous parviennent précisément sans mélanger les données des autres utilisateurs.
 
 De plus, le bot n'enregistre pas votre adresse IP, votre nom d'utilisateur ou d'autres détails qui pourraient vous identifier.
 """
     elif user_language == "es":
-        return """El bot procesa atentamente tus consultas y almacena tus datos de forma segura en una base de datos.
+        return """El bot se encarga de tus solicitudes y almacena tus datos de forma segura en una base de datos.
 
-Mantener el anonimato del usuario es primordial; por lo tanto, solo se retiene tu Chat_ID, garantizando la entrega precisa de mensajes sin mezclar datos de varios usuarios.
+Se otorga gran importancia a la protección de tu anonimato. Solo se conserva tu Chat_ID, garantizando que los mensajes te lleguen con precisión sin mezclar datos de otros usuarios.
 
-Además, el bot se abstiene de registrar tu IP, nombre de usuario u otros detalles que podrían identificarte como usuario
+Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles que puedan identificarte.
 """
     else:
-        # Default message for unsupported languages or English
-        return """The bot attentively processes your inquiries and securely stores your data within a database. 
-    
-Maintaining user anonymity is paramount; hence, only your Chat_ID is retained, ensuring precise message delivery without intertwining data from various users. 
-    
-Additionally, the bot refrains from logging your IP, username, or any other details that could potentially identify you as a user.
+        return """The bot takes care of your requests and securely stores your data in a database.
+
+Great importance is placed on protecting your anonymity. Only your Chat_ID is retained, ensuring that messages reach you accurately without mixing data from other users.
+
+Furthermore, the bot does not record your IP address, username, or other details that could identify you.
 """
 
 
@@ -192,6 +191,15 @@ async def stake_message(user_language: str):
         return "Los stakes en este monedero están siendo vigilados. Serás notificado si se retira algún stake."
     else:
         return "Stakes on this wallet are being watched. You'll be notified if a stake is withdrawn."
+
+
+async def wallets_found_track(user_language: str):
+    if user_language == "fr":
+        return "Sélectionnez un portefeuille:"
+    elif user_language == "es":
+        return "Tus carteras seguidas son (haz clic en una para ver qué contrato está seguido) :"
+    else:
+        return "Select a wallet:"
 
 
 async def wallets_found(user_language: str):
