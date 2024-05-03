@@ -118,6 +118,7 @@ async def settings_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
     french_options = [
         InlineKeyboardButton("🌏 Langue", callback_data="language_menu"),
         InlineKeyboardButton("💳 Abonnements", callback_data="subscriptions_menu"),
+        InlineKeyboardButton("❌ Supprimer mes données", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
@@ -236,6 +237,41 @@ async def naming_wallet_keyboard(user_language: str) -> InlineKeyboardMarkup:
     spanish_options = [
         InlineKeyboardButton("Sí", callback_data="yes"),
         InlineKeyboardButton("No", callback_data="no"),
+    ]
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    # Maximum options per row
+    max_options_per_row = 1
+
+    # Divide options into rows
+    keyboard = []
+    for i in range(0, len(buttons), max_options_per_row):
+        keyboard.append(buttons[i : i + max_options_per_row])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def remove_all_data_keyboard(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        InlineKeyboardButton("Yes", callback_data="yes_delete"),
+        InlineKeyboardButton("No", callback_data="no_delete"),
+    ]
+
+    french_options = [
+        InlineKeyboardButton("Oui", callback_data="yes_delete"),
+        InlineKeyboardButton("Non", callback_data="no_delete"),
+    ]
+
+    spanish_options = [
+        InlineKeyboardButton("Sí", callback_data="yes_delete"),
+        InlineKeyboardButton("No", callback_data="no_delete"),
     ]
 
     if user_language == "fr":

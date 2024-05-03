@@ -16,7 +16,7 @@ Este bot te alerta cada vez que el saldo de tu carteras cambia. ¡Mantente conec
         """
     else:
         # Default message for unsupported languages or English
-        return f"""🚀 Welcome to Crypto Wallet Monitor{username}, your ally for keeping a close eye on your cryptos!
+        return f"""🚀 Welcome to Crypto Wallet Monitor {username}, your ally for keeping a close eye on your cryptos!
 
 This bot alerts you whenever your wallets balance changes. Stay connected to your investments and never miss an important fluctuation!
 
@@ -238,6 +238,24 @@ async def contracts_found(user_language, formatted_contracts):
         return f"Contratos para el monedero seleccionado :\n{formatted_contracts}"
     else:
         return f"Contracts for selected wallet:\n{formatted_contracts}"
+
+
+async def remove_all_data(user_language):
+    if user_language == "fr":
+        return f"Voulez-vous vraiment supprimer toutes vos données ?"
+    elif user_language == "es":
+        return f"¿Estás seguro/a de que quieres eliminar todos tus datos?"
+    else:
+        return f"Are you sure you want to delete all your data?"
+
+
+async def all_data_removed(user_language):
+    if user_language == "fr":
+        return f"Toutes vos données ont été supprimées."
+    elif user_language == "es":
+        return f"Todos sus datos han sido borrados."
+    else:
+        return f"All of your data has been deleted."
 
 
 async def tracked_wallet_setup_message(

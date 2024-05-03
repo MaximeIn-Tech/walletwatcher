@@ -116,3 +116,13 @@ async def fetch_contract_wallet(wallet_address):
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
+
+
+async def remove_all_from_db(chat_id):
+    supabase = connect_to_database()
+    try:
+        data = supabase.table("Wallets").delete().eq("chat_id", chat_id).execute()
+        data = supabase.table("Contracts").delete().eq("chat_id", chat_id).execute()
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors

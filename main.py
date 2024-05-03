@@ -88,7 +88,8 @@ PREDEFINED_TOKENS = {
 
 
 async def start(update, context):
-    language = await get_language_for_chat_id(update.effective_chat.id)
+    language = update.effective_user.language_code
+    context.user_data["language"] = language
     try:
         context.user_data["chat_id"] = update.effective_chat.id
         context.user_data["name"] = update.message.from_user.first_name
@@ -215,11 +216,47 @@ Trigger Point: {contract["trigger_point"]}
         )
 
 
+########################## Remove Wallet #######################################
 
+async def remove_menu(update, context):
+    await show_wallets(update, context)
+
+
+async def delete_all(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+            text = await remove_all_data(language),
+            reply_markup=await remove_all_data_keyboard(language),
+        )
+    
+async def handle_deletion_delete_all(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    chat_id = update.effective_chat.id
+    query = update.callback_query
+    user_response = query.data
+    print("User response:", user_response)  # Check the user's response for debugging
+    if user_response == 'yes_delete':
+        await remove_all_from_db(chat_id)
+        await query.edit_message_text(
+            text=await all_data_removed(language),
+            reply_markup=await back_to_to_main_keyboard(language),
+        )
+    elif user_response == 'no_delete':
+        # User canceled deletion, you can handle this according to your needs
+        await query.answer("Deletion canceled.")
+        await query.message.delete()
+    else:
+        # Handle unexpected user response
+        await query.answer("Invalid response. Please use the provided buttons.")
+
+
+    
+    
 ############################ Add Track #########################################
 """
 TODO: 
-- Show a menu when the user clicks on "Track" that shows all the wallets that are in the database for that user. If there is none, don't ask for that menu. If there are wallets, also add a button to add a new wallet (and watch).
 - The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
 - Maybe add a delete all button too with a confirmation.
 """
@@ -669,6 +706,9 @@ if __name__ == "__main__":
     application.add_handler(CallbackQueryHandler(main_menu, pattern="main"))
     application.add_handler(CallbackQueryHandler(help, pattern="help_menu"))
     application.add_handler(CallbackQueryHandler(show_wallets, pattern="list_wallets"))
+    application.add_handler(CallbackQueryHandler(remove_menu, pattern="remove_wallet_menu"))
+    application.add_handler(CallbackQueryHandler(delete_all, pattern="delete_all"))
+    application.add_handler(CallbackQueryHandler(handle_deletion_delete_all, pattern=r"^(yes_delete|no_delete)$"))
     application.add_handler(
     CallbackQueryHandler(handle_wallet_selection, pattern=r"^wallet_")
 )
