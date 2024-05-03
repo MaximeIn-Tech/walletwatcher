@@ -50,15 +50,15 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
 async def back_to_to_main_keyboard(user_language: str) -> InlineKeyboardMarkup:
 
     english_options = [
-        InlineKeyboardButton("🏠 Main menu", callback_data="main"),
+        [InlineKeyboardButton("🏠 Main menu", callback_data="main")],
     ]
 
     french_options = [
-        InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
+        [InlineKeyboardButton("🏠 Menu principal", callback_data="main")],
     ]
 
     spanish_options = [
-        InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
+        [InlineKeyboardButton("🏠 Menú principal", callback_data="main")],
     ]
 
     if user_language == "fr":
