@@ -1,26 +1,26 @@
 ######## MENU MESSAGES ###########
 async def main_menu_message(username, user_language):
     if user_language == "fr":
-        return f"""🚀 Bienvenue sur Crypto Wallet Monitor[{username}otre allié pour surveiller vos cryptos de près !
+        return f"""🚀 Bienvenue sur Crypto Wallet Monitor {username}, votre allié pour surveiller vos cryptos de près !
 
-Ce bot vous alerte dès que la balance de votre portefeuille change. Restez connecté à vos investissements et ne ratez aucune variation importante !
+Ce bot vous alerte dès que le solde de vos portefeuilles change. Restez connecté à vos investissements et ne ratez aucune variation importante !
 
-Prêt à être notifié à chaque mouvement ? Ajoutez vos portefeuilles et gardez le contrôle total ! 📈✨
+Prêt à être notifié à chaque mouvement ? Ajoutez vos portefeuilles et gardez le contrôle total ! 🚨
 """
     elif user_language == "es":
         return f"""🚀 ¡Bienvenido a Crypto Wallet Monitor {username}, tu aliado para vigilar de cerca tus criptomonedas!
 
-Este bot te alerta cada vez que el saldo de tu cartera cambia. ¡Mantente conectado a tus inversiones y no te pierdas ninguna fluctuación importante!
+Este bot te alerta cada vez que el saldo de tu carteras cambia. ¡Mantente conectado a tus inversiones y no te pierdas ninguna fluctuación importante!
 
-¿Listo para recibir notificaciones con cada movimiento? ¡Agrega tus carteras y mantén el control total! 📈✨
+¿Listo para recibir notificaciones con cada movimiento? ¡Agrega tus carteras y mantén el control total! 🚨
         """
     else:
         # Default message for unsupported languages or English
         return f"""🚀 Welcome to Crypto Wallet Monitor{username}, your ally for keeping a close eye on your cryptos!
 
-This bot alerts you whenever your wallet balance changes. Stay connected to your investments and never miss an important fluctuation!
+This bot alerts you whenever your wallets balance changes. Stay connected to your investments and never miss an important fluctuation!
 
-Ready to be notified with every move? Add your wallets and stay in complete control! 📈✨
+Ready to be notified with every move? Add your wallets and stay in complete control! 🚨
 """
 
 

@@ -91,9 +91,7 @@ async def start(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     try:
         context.user_data["chat_id"] = update.effective_chat.id
-        context.user_data["language"] = language
         context.user_data["name"] = update.message.from_user.first_name
-        print(context.user_data["chat_id"])
         # Check if the user already exists in the Users table
         existing_user = (
             supabase.table("Users")
@@ -101,7 +99,6 @@ async def start(update, context):
             .eq("chat_id", context.user_data["chat_id"])
             .execute()
         )
-        print(existing_user)
 
         if not existing_user.data:
             # User does not exist, insert new record
@@ -115,9 +112,9 @@ async def start(update, context):
                 )
                 .execute()
             )
-            print("User added")
+            logger.info(f"User {context.user_data["chat_id"]} added.")
         else:
-            print("User already exists")
+            logger.info(f"User {context.user_data["chat_id"]} already exists.")
 
         # Reply to the user
         await update.message.reply_text(
@@ -125,12 +122,11 @@ async def start(update, context):
             reply_markup=await main_menu_keyboard(language),
         )
     except Exception as e:
-        print("An error occurred:", e)
+        logger.error("An error occurred:", e)
 
 
 async def main_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
-    print(language)
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
@@ -563,7 +559,7 @@ async def prompt_tracked_wallet(update, context):
         .execute()
     )
     count = await fetch_wallets_user(context.user_data["chat_id"])
-    print (f"User {context.user_data["chat_id"]} has {count.count} wallets in the db")
+    logger.info (f"User {context.user_data["chat_id"]} has {count.count} wallets in the db")
 
     if not existing_wallets.data:
         # Wallet does not exist, insert new record
@@ -578,9 +574,9 @@ async def prompt_tracked_wallet(update, context):
             )
             .execute()
         )
-        print("Wallet added")
+        logger.info(f"Wallet for {context.user_data["chat_id"]} added")
     else:
-        print("Wallet already exists")
+        logger.info(f"Wallet of {context.user_data["chat_id"]} already exists")
 
     data = (
         supabase.table("Contracts")
@@ -600,7 +596,7 @@ async def prompt_tracked_wallet(update, context):
 
 
     count = await fetch_contract_user(context.user_data["chat_id"])
-    print (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
+    logger.info (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
 
     message = await tracked_wallet_setup_message(
         wallet_name,
