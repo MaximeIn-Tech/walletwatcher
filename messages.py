@@ -194,6 +194,44 @@ async def stake_message(user_language: str):
         return "Stakes on this wallet are being watched. You'll be notified if a stake is withdrawn."
 
 
+async def wallets_found(user_language: str):
+    if user_language == "fr":
+        return "Vos portefeuilles suivis sont (cliquez sur l'un d'eux pour voir quels contrats sont suivis) :"
+    elif user_language == "es":
+        return "Tus carteras seguidas son (haz clic en una para ver qué contrato está seguido) :"
+    else:
+        return (
+            "Your wallet followed are (click on one to see what contract is followed):"
+        )
+
+
+async def no_wallets_found(user_language: str):
+    if user_language == "fr":
+        return "Aucun portefeuille n'a été trouvé."
+    elif user_language == "es":
+        return "No se encontraron carteras."
+    else:
+        return "No wallets have been found."
+
+
+async def no_contracts_found(user_language: str):
+    if user_language == "fr":
+        return "Aucun contrat n'a été trouvé pour ce portefeuille."
+    elif user_language == "es":
+        return "No se encontraron contratos para este monedero."
+    else:
+        return "No contracts have been found for this wallet."
+
+
+async def contracts_found(user_language, formatted_contracts):
+    if user_language == "fr":
+        return f"Contrats pour le portefeuille sélectionné :\n{formatted_contracts}"
+    elif user_language == "es":
+        return f"Contratos para el monedero seleccionado :\n{formatted_contracts}"
+    else:
+        return f"Contracts for selected wallet:\n{formatted_contracts}"
+
+
 async def tracked_wallet_setup_message(
     wallet_name,
     blockchain,

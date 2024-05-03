@@ -148,6 +148,77 @@ async def help(update, context):
         reply_markup=await back_to_to_main_keyboard(language),
     )
 
+############################ Wallets Section #########################################
+
+async def show_wallets(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    chat_id = query.message.chat_id
+
+    # Fetch wallets associated with the user from the database
+    user_wallets = await fetch_wallets_user(chat_id)
+
+    if user_wallets.count > 0:
+        wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
+        buttons = []
+
+        # Generate buttons two by two
+        for i in range(0, len(wallets_data), 2):
+            row = []
+            for j in range(2):
+                if i + j < len(wallets_data):
+                    wallet = wallets_data[i + j]
+                    row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"wallet_{wallet['wallet_address']}"))
+            buttons.append(row)
+
+        buttons.append([InlineKeyboardButton("🔙", callback_data="main_menu")])
+
+        reply_markup = InlineKeyboardMarkup(buttons)
+
+        await query.answer()
+        await query.edit_message_text(
+            text=await wallets_found(language),
+            reply_markup=reply_markup,
+        )
+    else:
+        # If user doesn't have any wallets, inform them
+        await query.answer()
+        await query.edit_message_text(
+            text=await no_wallets_found(language),
+            reply_markup=await back_to_to_main_keyboard(language),
+        )
+
+
+async def handle_wallet_selection(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    wallet_address = query.data.split("_")[1]  # Extract wallet address from callback data
+
+    # Fetch all contracts associated with the selected wallet address
+    contracts = await fetch_contract_wallet(wallet_address)
+
+    if contracts.data:
+        # If contracts are found, format them and send to the user
+        formatted_contracts = "\n".join([f"""
+Blockchain: {contract["blockchain"]}
+Token: {contract['token_symbol']}
+Contract Address: {contract['contract_address']}
+Trigger Point: {contract["trigger_point"]}
+""" for contract in contracts.data])
+        await query.answer()
+        await query.edit_message_text(
+            text=await contracts_found(language, formatted_contracts),
+            reply_markup=await back_to_list_wallets(language),
+        )
+    else:
+        # If no contracts are found, inform the user
+        await query.answer()
+        await query.edit_message_text(
+            text=await no_contracts_found(language),
+            reply_markup=await back_to_list_wallets(language),
+        )
+
+
 
 ############################ Add Track #########################################
 """
@@ -386,32 +457,31 @@ async def handle_trigger_point(update, context):
     context.user_data.pop("is_entering_trigger_point", None)
 
     # Prompt the user with the saved setup
-    await prompt_tracked_wallet(context)
-    print(context.user_data)
+    await prompt_tracked_wallet(update, context)
 
 
 # COMPLETED:
 
 
-async def prompt_tracked_wallet(context):
-    language = context.user_data["language"]
+async def prompt_tracked_wallet(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     blockchain = context.user_data.get("blockchain")
     wallet_address = context.user_data.get("wallet_address")
     wallet_name = context.user_data.get("wallet_name")
     symbol = context.user_data.get("selected_symbol")
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
-    print(type(trigger_point))
 
     # Check if the wallet exists
     existing_wallets = (
         supabase.table("Wallets")
-        .select()
+        .select("*")
         .eq("chat_id", context.user_data["chat_id"])
         .eq("wallet_address", wallet_address)
         .execute()
     )
-    print(existing_wallets)
+    count = await fetch_wallets_user(context.user_data["chat_id"])
+    print (f"User {context.user_data["chat_id"]} has {count.count} wallets in the db")
 
     if not existing_wallets.data:
         # Wallet does not exist, insert new record
@@ -430,20 +500,25 @@ async def prompt_tracked_wallet(context):
     else:
         print("Wallet already exists")
 
-    # data = (
-    #     supabase.table("Contracts")
-    #     .insert(
-    #         {
-    #             "wallet_address": wallet_address,
-    #             "blockchain": blockchain,
-    #             "contract_address": contract_address,
-    #             "token_symbol": symbol,
-    #             "trigger_point": trigger_point,
-    #             "balance": None,
-    #         }
-    #     )
-    #     .execute()
-    # )
+    data = (
+        supabase.table("Contracts")
+        .insert(
+            {
+                "chat_id": context.user_data["chat_id"],
+                "wallet_address": wallet_address,
+                "blockchain": blockchain,
+                "contract_address": contract_address,
+                "token_symbol": symbol,
+                "trigger_point": trigger_point,
+                "balance": None,
+            }
+        )
+        .execute()
+    )
+
+
+    count = await fetch_contract_user(context.user_data["chat_id"])
+    print (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
 
     message = await tracked_wallet_setup_message(
         wallet_name,
@@ -458,7 +533,7 @@ async def prompt_tracked_wallet(context):
     await context.bot.send_message(
         chat_id=context.user_data["chat_id"],
         text=message,
-        reply_markup=await back_to_to_main_keyboard(context.user_data["language"]),
+        reply_markup=await back_to_to_main_keyboard(language),
     )
 
 
@@ -506,6 +581,11 @@ if __name__ == "__main__":
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(main_menu, pattern="main"))
     application.add_handler(CallbackQueryHandler(help, pattern="help_menu"))
+    application.add_handler(CallbackQueryHandler(show_wallets, pattern="list_wallets"))
+    application.add_handler(
+    CallbackQueryHandler(handle_wallet_selection, pattern=r"^wallet_")
+)
+
 
     ############################ Add Track Handlers ############################
     application.add_handler(
