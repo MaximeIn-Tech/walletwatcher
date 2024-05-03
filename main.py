@@ -561,9 +561,18 @@ async def language_selection_menu(update, context):
 
 
 async def language_selection(update, context):
+    chat_id = update.effective_chat.id
     query = update.callback_query
     selected_language = query.data
+    supabase = connect_to_database()
+    user_response = (
+            supabase.table("Users")
+            .update({"language": selected_language})
+            .eq("chat_id", chat_id)
+            .execute()
+        )
     context.user_data["language"] = selected_language
+    
     await query.answer()
     await query.edit_message_text(
         text=await language_selection_message(context.user_data["language"]),
