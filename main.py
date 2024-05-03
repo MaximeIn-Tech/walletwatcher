@@ -256,9 +256,10 @@ async def handle_deletion_delete_all(update, context):
     
 ############################ Add Track #########################################
 """
-TODO: 
+TODO:
+- Add more information in the help menu:
+    - Where is the data taken.
 - The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
-- Maybe add a delete all button too with a confirmation.
 """
 
 
@@ -312,17 +313,13 @@ async def track_sub_menu_1(update, context):
         reply_markup = InlineKeyboardMarkup(buttons)
 
         await query.answer()
-        await query.edit_message_text(
-            text=await wallets_found_track(language),
-            reply_markup=reply_markup,
-        )
+        await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
     else:
         # If user doesn't have any wallets, prompt them to add a new wallet
         await query.answer()
-        await query.edit_message_text(
-            text=await blockchain_choice_message(language),
-            reply_markup=await blockchain_keyboard(language),
-        )
+        print(language)
+        await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
+
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
