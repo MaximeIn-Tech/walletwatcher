@@ -1,32 +1,26 @@
 ######## MENU MESSAGES ###########
 async def main_menu_message(username, user_language):
     if user_language == "fr":
-        return f"""🚀 Bienvenue sur Crypto Wallet Monitor {username}, conçu avec soin par @TechSherpa !
+        return f"""🚀 Bienvenue sur Crypto Wallet Monitor[{username}otre allié pour surveiller vos cryptos de près !
 
-Prêt à rester informé en temps réel dès que des transactions se produisent dans vos portefeuilles de cryptomonnaie ? Commençons !
+Ce bot vous alerte dès que la balance de votre portefeuille change. Restez connecté à vos investissements et ne ratez aucune variation importante !
 
-Avec ce bot intuitif, vous pouvez choisir manuellement vos portefeuilles sur différentes blockchains, définir vos préférences et rester informé des mises à jour précisément quand vous le souhaitez.
-
-Explorez notre ensemble de commandes :
+Prêt à être notifié à chaque mouvement ? Ajoutez vos portefeuilles et gardez le contrôle total ! 📈✨
 """
     elif user_language == "es":
-        return f"""🚀 ¡Bienvenido a Crypto Wallet Monitor {username}, elaborado con cuidado por @TechSherpa!
+        return f"""🚀 ¡Bienvenido a Crypto Wallet Monitor {username}, tu aliado para vigilar de cerca tus criptomonedas!
 
-¿Listo para mantenerte informado con alertas en tiempo real cada vez que ocurran transacciones en tus carteras de criptomonedas? ¡Comencemos!
+Este bot te alerta cada vez que el saldo de tu cartera cambia. ¡Mantente conectado a tus inversiones y no te pierdas ninguna fluctuación importante!
 
-Con este bot intuitivo, puedes elegir manualmente tus carteras de diferentes blockchains, configurar tus preferencias y mantenerte al tanto de las actualizaciones precisamente cuando lo desees.
-
-¡Explora nuestra suite de comandos!
+¿Listo para recibir notificaciones con cada movimiento? ¡Agrega tus carteras y mantén el control total! 📈✨
         """
     else:
         # Default message for unsupported languages or English
-        return f"""🚀 Welcome to Crypto Wallet Monitor {username}, crafted with care by @TechSherpa!
+        return f"""🚀 Welcome to Crypto Wallet Monitor{username}, your ally for keeping a close eye on your cryptos!
 
-Ready to stay in the loop with real-time alerts whenever transactions occur in your crypto wallets? Let's get started!
+This bot alerts you whenever your wallet balance changes. Stay connected to your investments and never miss an important fluctuation!
 
-With this intuitive bot, you can handpick wallets from various blockchains, set your preferences, and stay in the loop with updates precisely when you desire.
-
-Explore our suite of commands:
+Ready to be notified with every move? Add your wallets and stay in complete control! 📈✨
 """
 
 
@@ -37,6 +31,8 @@ async def help_message(user_language: str):
 Une grande importance est accordée à la protection de votre anonymat. Seul votre Chat_ID est conservé, garantissant ainsi que les messages vous parviennent précisément sans mélanger les données des autres utilisateurs.
 
 De plus, le bot n'enregistre pas votre adresse IP, votre nom d'utilisateur ou d'autres détails qui pourraient vous identifier.
+
+Créé par @TechSherpa.
 """
     elif user_language == "es":
         return """El bot se encarga de tus solicitudes y almacena tus datos de forma segura en una base de datos.
@@ -44,6 +40,8 @@ De plus, le bot n'enregistre pas votre adresse IP, votre nom d'utilisateur ou d'
 Se otorga gran importancia a la protección de tu anonimato. Solo se conserva tu Chat_ID, garantizando que los mensajes te lleguen con precisión sin mezclar datos de otros usuarios.
 
 Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles que puedan identificarte.
+
+Creado por @TechSherpa.
 """
     else:
         return """The bot takes care of your requests and securely stores your data in a database.
@@ -51,6 +49,8 @@ Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles
 Great importance is placed on protecting your anonymity. Only your Chat_ID is retained, ensuring that messages reach you accurately without mixing data from other users.
 
 Furthermore, the bot does not record your IP address, username, or other details that could identify you.
+
+Created by @TechSherpa.
 """
 
 
