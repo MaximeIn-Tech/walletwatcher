@@ -222,22 +222,22 @@ async def no_wallets_found(user_language: str):
         return "No wallets have been found."
 
 
-async def no_contracts_found(user_language: str):
+async def no_setups_found(user_language: str):
     if user_language == "fr":
-        return "Aucun contrat n'a été trouvé pour ce portefeuille."
+        return "Aucun setup n'a été trouvé pour ce portefeuille."
     elif user_language == "es":
-        return "No se encontraron contratos para este monedero."
+        return "No se han encontrado configuraciones para esta cartera."
     else:
-        return "No contracts have been found for this wallet."
+        return "No setups have been found for this wallet."
 
 
-async def contracts_found(user_language, formatted_contracts):
+async def setups_found(user_language, formatted_setups):
     if user_language == "fr":
-        return f"Contrats pour le portefeuille sélectionné :\n{formatted_contracts}"
+        return f"Setups pour le portefeuille sélectionné :\n{formatted_setups}"
     elif user_language == "es":
-        return f"Contratos para el monedero seleccionado :\n{formatted_contracts}"
+        return f"Configuraciones para el monedero seleccionado :\n{formatted_setups}"
     else:
-        return f"Contracts for selected wallet:\n{formatted_contracts}"
+        return f"Setups for selected wallet:\n{formatted_setups}"
 
 
 async def remove_all_data(user_language):

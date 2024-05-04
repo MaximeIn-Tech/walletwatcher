@@ -191,27 +191,29 @@ async def handle_wallet_selection(update, context):
     query = update.callback_query
     wallet_address = query.data.split("_")[1]  # Extract wallet address from callback data
 
-    # Fetch all contracts associated with the selected wallet address
-    contracts = await fetch_contract_wallet(wallet_address)
+    # Fetch all setups associated with the selected wallet address
+    setups = await fetch_setup_wallet(wallet_address)
 
-    if contracts.data:
-        # If contracts are found, format them and send to the user
-        formatted_contracts = "\n".join([f"""
-Blockchain: {contract["blockchain"]}
-Token: {contract['token_symbol']}
-Contract Address: {contract['contract_address']}
-Trigger Point: {contract["trigger_point"]}
-""" for contract in contracts.data])
+    if setups.data:
+        # If setups are found, format them and send to the user
+        formatted_setups = "\n".join([f"""{setup["wallet_address"]}
+
+Setup {n}:                                                                            
+Blockchain: {setup["blockchain"]}
+Token: {setup['token_symbol']}
+Contract Address: {setup['contract_address']}
+Trigger Point: {setup["trigger_point"]}
+""" for n, setup in enumerate(setups.data, start=1)])
         await query.answer()
         await query.edit_message_text(
-            text=await contracts_found(language, formatted_contracts),
+            text=await setups_found(language, formatted_setups),
             reply_markup=await back_to_list_wallets(language),
         )
     else:
-        # If no contracts are found, inform the user
+        # If no setups are found, inform the user
         await query.answer()
         await query.edit_message_text(
-            text=await no_contracts_found(language),
+            text=await no_setups_found(language),
             reply_markup=await back_to_list_wallets(language),
         )
 
@@ -613,7 +615,7 @@ async def prompt_tracked_wallet(update, context):
         logger.info(f"Wallet of {context.user_data["chat_id"]} already exists")
 
     data = (
-        supabase.table("Contracts")
+        supabase.table("Setups")
         .insert(
             {
                 "chat_id": context.user_data["chat_id"],
@@ -629,7 +631,7 @@ async def prompt_tracked_wallet(update, context):
     )
 
 
-    count = await fetch_contract_user(context.user_data["chat_id"])
+    count = await fetch_setups_user(context.user_data["chat_id"])
     logger.info (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
 
     message = await tracked_wallet_setup_message(

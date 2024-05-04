@@ -82,36 +82,36 @@ async def fetch_wallet_address(wallet_address):
         return None  # Return None in case of any errors
 
 
-async def fetch_contract_user(chat_id):
+async def fetch_setups_user(chat_id):
     supabase = connect_to_database()
     try:
-        contract_number = (
-            supabase.table("Contracts")
+        setup_number = (
+            supabase.table("Setups")
             .select("*", count="exact")
             .eq("chat_id", chat_id)
             .execute()
         )
 
-        if contract_number:
-            return contract_number
+        if setup_number:
+            return setup_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
 
 
-async def fetch_contract_wallet(wallet_address):
+async def fetch_setup_wallet(wallet_address):
     supabase = connect_to_database()
     try:
-        contract_number = (
-            supabase.table("Contracts")
+        setup_number = (
+            supabase.table("Setups")
             .select("*", count="exact")
             .eq("wallet_address", wallet_address)
             .execute()
         )
 
-        if contract_number:
-            return contract_number
+        if setup_number:
+            return setup_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
         print("An error occurred:", e)
@@ -122,7 +122,7 @@ async def remove_all_from_db(chat_id):
     supabase = connect_to_database()
     try:
         data = supabase.table("Wallets").delete().eq("chat_id", chat_id).execute()
-        data = supabase.table("Contracts").delete().eq("chat_id", chat_id).execute()
+        data = supabase.table("Setups").delete().eq("chat_id", chat_id).execute()
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
