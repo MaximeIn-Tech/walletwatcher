@@ -105,6 +105,7 @@ async def start(update, context):
                     {
                         "chat_id": context.user_data["chat_id"],
                         "language": context.user_data["language"],
+                        "subscription": "Free",
                     }
                 )
                 .execute()
