@@ -118,6 +118,15 @@ async def fetch_setup_wallet(wallet_address):
         return None  # Return None in case of any errors
 
 
+async def remove_setup_from_db(setup_id):
+    supabase = connect_to_database()
+    try:
+        data = supabase.table("Setups").delete().eq("id", setup_id).execute()
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
+
+
 async def remove_all_from_db(chat_id):
     supabase = connect_to_database()
     try:

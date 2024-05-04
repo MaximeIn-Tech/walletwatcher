@@ -224,20 +224,32 @@ async def no_wallets_found(user_language: str):
 
 async def no_setups_found(user_language: str):
     if user_language == "fr":
-        return "Aucun setup n'a été trouvé pour ce portefeuille."
+        return "Aucune alerte n'a été trouvé pour ce portefeuille."
     elif user_language == "es":
-        return "No se han encontrado configuraciones para esta cartera."
+        return "No se han encontrado alertas para esta cartera."
     else:
-        return "No setups have been found for this wallet."
+        return "No alerts have been found for this wallet."
 
 
-async def setups_found(user_language, formatted_setups):
+async def setups_found(user_language, formatted_setups, wallet_address):
     if user_language == "fr":
-        return f"Setups pour le portefeuille sélectionné :\n{formatted_setups}"
+        return f"Alertes pour le portefeuille sélectionné :\n{wallet_address}\n\n{formatted_setups}\n"
     elif user_language == "es":
-        return f"Configuraciones para el monedero seleccionado :\n{formatted_setups}"
+        return f"Alertas para el monedero seleccionado :\n{formatted_setups}"
     else:
-        return f"Setups for selected wallet:\n{formatted_setups}"
+        return f"Alertes for selected wallet:\n{formatted_setups}"
+
+
+async def alert_text(user_language):
+    if user_language == "fr":
+        return f"Alerte"
+    elif user_language == "es":
+        return f"Alerta"
+    else:
+        return f"Alert"
+
+
+##### DELETE SECTION
 
 
 async def remove_all_data(user_language):
@@ -258,6 +270,34 @@ async def all_data_removed(user_language):
         return f"All of your data has been deleted."
 
 
+async def setup_deletion_success(user_language):
+    if user_language == "fr":
+        return f"L'alerte sélectionnée a bien été supprimée. Pour en supprimer une nouvelle, cliquez sur Back."
+    elif user_language == "es":
+        return f"La alerta seleccionada ha sido eliminada correctamente. Para eliminar otra, haga clic en Back."
+    else:
+        return f"The selected alert has been successfully deleted. To delete another one, click on Back."
+
+
+async def setup_to_delete_1(user_language):
+    if user_language == "fr":
+        return f"Voici vos alertes pour ce portefeuille :"
+    elif user_language == "es":
+        return f"Aquí están tus alertas para este monedero:"
+    else:
+        return f"Here are your alerts for this wallet:"
+
+
+async def setup_to_delete_2(user_language):
+    if user_language == "fr":
+        return f"Veuillez sélectionner celle que vous souhaitez supprimer."
+    elif user_language == "es":
+        return f"Por favor selecciona la que deseas eliminar."
+    else:
+        return f"Please select one you want to delete."
+
+
+####
 async def tracked_wallet_setup_message(
     wallet_name,
     blockchain,
