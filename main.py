@@ -62,11 +62,9 @@ CONTRACT_ADDRESS_PATTERN = re.compile(
     f"({'|'.join([THETA_CONTRACT_ADDRESS_PATTERN, BSC_CONTRACT_ADDRESS_PATTERN])})"
 )
 
-
 TOKEN_SYMBOL_PATTERN = r"^[A-Za-z0-9]+$"
 
 ####### Predefined tokens and contract addresses ##########
-
 
 PREDEFINED_TOKENS = {
     "bitcoin": [{"symbol": "BTC", "contract_address": None}],
@@ -83,9 +81,7 @@ PREDEFINED_TOKENS = {
     "bsc": [{"symbol": "BNB", "contract_address": None}],
 }
 
-
 ############################ Bot Menus #########################################
-
 
 async def start(update, context):
     language = update.effective_user.language_code
@@ -125,7 +121,6 @@ async def start(update, context):
     except Exception as e:
         logger.error("An error occurred:", e)
 
-
 async def main_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -134,7 +129,6 @@ async def main_menu(update, context):
         text=await main_menu_message(query.from_user.first_name, language),
         reply_markup=await main_menu_keyboard(language),
     )
-
 
 async def help(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -185,7 +179,6 @@ async def show_wallets(update, context):
             reply_markup=await back_to_to_main_keyboard(language),
         )
 
-
 async def handle_wallet_selection(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -217,12 +210,10 @@ Trigger Point: {setup["trigger_point"]}
             reply_markup=await back_to_list_wallets(language),
         )
 
-
 ########################## Remove Wallet #######################################
 
 async def remove_menu(update, context):
     await show_wallets(update, context)
-
 
 async def delete_all(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -252,9 +243,6 @@ async def handle_deletion_delete_all(update, context):
     else:
         # Handle unexpected user response
         await query.answer("Invalid response. Please use the provided buttons.")
-
-
-    
     
 ############################ Add Track #########################################
 """
@@ -264,18 +252,7 @@ TODO:
 - The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
 """
 
-
 # STEP 1 : Handle blockchain selection
-# async def track_sub_menu_1(update, context):
-#     language = await get_language_for_chat_id(update.effective_chat.id)
-#     query = update.callback_query
-#     context.user_data["chat_id"] = query.message.chat_id
-#     await query.answer()
-#     await context.bot.send_message(
-#         chat_id=query.message.chat_id,
-#         text=await blockchain_choice_message(language),
-#         reply_markup=await blockchain_keyboard(),
-#     )
 
 async def add_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -322,7 +299,6 @@ async def track_sub_menu_1(update, context):
         print(language)
         await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
 
-
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -349,8 +325,6 @@ async def handle_wallet_selection_for_add(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
-
-
 async def blockchain_selection(update, context):
     query = update.callback_query
     selected_blockchain = str(
@@ -365,7 +339,6 @@ async def blockchain_selection(update, context):
     else:
         await prompt_wallet_address_input(update, context, selected_blockchain)
 
-
 async def prompt_wallet_address_input(update, context, selected_blockchain):
     language = await get_language_for_chat_id(update.effective_chat.id)
     selected_blockchain = selected_blockchain.upper()
@@ -373,7 +346,6 @@ async def prompt_wallet_address_input(update, context, selected_blockchain):
     await context.bot.send_message(
         chat_id=update.callback_query.message.chat_id, text=text
     )
-
 
 # STEP 2 : Handle wallet address input
 async def handle_messages(update, context):
@@ -385,7 +357,6 @@ async def handle_messages(update, context):
         await handle_contract_address(update, context)
     else:
         await handle_wallet_address(update, context)
-
 
 # STEP 3 : Name the wallet.
 async def naming_wallet_selection(update, context):
@@ -407,9 +378,6 @@ async def naming_wallet_selection(update, context):
             context.user_data["wallet_name"] = "None"
             await select_token_symbol(update, context)
 
-    
-
-
 async def handle_wallet_address(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     wallet_address = update.message.text
@@ -429,7 +397,6 @@ async def handle_wallet_address(update, context):
             text=await wallet_address_error(language),
         )
 
-
 async def handle_wallet_name(update, context):
     wallet_name = update.message.text
     context.user_data["wallet_name"] = wallet_name
@@ -437,7 +404,6 @@ async def handle_wallet_name(update, context):
     context.user_data.pop(
         "is_entering_wallet_name", None
     )  # Remove the key if it exists
-
 
 # STEP 4:
 async def select_token_symbol(update, context):
@@ -455,7 +421,6 @@ async def select_token_symbol(update, context):
         text=await token_symbol_choice(language),
         reply_markup=reply_markup,
     )
-
 
 async def handle_selected_token(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -503,7 +468,6 @@ async def handle_selected_token(update, context):
         else:
             await query.answer("Invalid selection")
 
-
 async def handle_contract_address(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     contract_address = update.message.text
@@ -524,7 +488,6 @@ async def handle_contract_address(update, context):
             text=await contract_address_error(language),
         )
 
-
 # STEP 6: TRIGGER POINT
 async def prompt_trigger_point(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -534,7 +497,6 @@ async def prompt_trigger_point(update, context):
         parse_mode="HTML",
     )
     context.user_data["is_entering_trigger_point"] = True
-
 
 async def handle_trigger_point(update, context):
     trigger_point = update.message.text
@@ -573,9 +535,7 @@ async def handle_trigger_point(update, context):
     # Prompt the user with the saved setup
     await prompt_tracked_wallet(update, context)
 
-
 # COMPLETED:
-
 
 async def prompt_tracked_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -650,9 +610,7 @@ async def prompt_tracked_wallet(update, context):
         reply_markup=await back_to_to_main_keyboard(language),
     )
 
-
 ############################ Settings Menus ####################################
-
 
 async def settings_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -663,7 +621,6 @@ async def settings_menu(update, context):
         reply_markup=await settings_menu_keyboard(language),
     )
 
-
 async def language_selection_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -672,7 +629,6 @@ async def language_selection_menu(update, context):
         text=await language_selection_message(language),
         reply_markup=await language_keyboard(language),
     )
-
 
 async def language_selection(update, context):
     chat_id = update.effective_chat.id
@@ -693,7 +649,6 @@ async def language_selection(update, context):
         reply_markup=await language_keyboard(context.user_data["language"]),
     )
 
-
 if __name__ == "__main__":
     print("Starting bot ...")
     application = Application.builder().token(token).build()
@@ -711,8 +666,6 @@ if __name__ == "__main__":
     application.add_handler(
     CallbackQueryHandler(handle_wallet_selection, pattern=r"^wallet_")
 )
-
-
 
     ############################ Add Track Handlers ############################
     application.add_handler(
