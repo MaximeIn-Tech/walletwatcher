@@ -233,11 +233,11 @@ async def no_setups_found(user_language: str):
 
 async def setups_found(user_language, formatted_setups, wallet_address):
     if user_language == "fr":
-        return f"Alertes pour le portefeuille sélectionné :\n\n{wallet_address}\n\n{formatted_setups}\n"
+        return f"Alertes pour le portefeuille sélectionné :\n{wallet_address}\n\n{formatted_setups}\n"
     elif user_language == "es":
-        return f"Alertas para el monedero seleccionado :\n\n{formatted_setups}"
+        return f"Alertas para el monedero seleccionado :\n{wallet_address}\n\n{formatted_setups}\n"
     else:
-        return f"Alerts for selected wallet:\n\n{formatted_setups}"
+        return f"Alerts for selected wallet:\n{wallet_address}\n\n{formatted_setups}\n"
 
 
 async def alert_text(user_language):
