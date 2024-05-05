@@ -239,6 +239,39 @@ async def language_keyboard(user_language: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+async def back_to_settings_menu(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Main menu", callback_data="main")],
+    ]
+
+    french_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Menu principal", callback_data="main")],
+    ]
+
+    spanish_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Menú principal", callback_data="main")],
+    ]
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 ############################ Add Track Menus #########################################
 
 

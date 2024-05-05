@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import re
@@ -84,11 +85,14 @@ PREDEFINED_TOKENS = {
 ############################ Bot Menus #########################################
 
 async def start(update, context):
-    language = update.effective_user.language_code
-    context.user_data["language"] = language
     try:
+        language = update.effective_user.language_code
+        print(language)
+        context.user_data["language"] = language
+
         context.user_data["chat_id"] = update.effective_chat.id
         context.user_data["name"] = update.message.from_user.first_name
+
         # Check if the user already exists in the Users table
         existing_user = (
             supabase.table("Users")
@@ -110,17 +114,33 @@ async def start(update, context):
                 )
                 .execute()
             )
-            logger.info(f"User {context.user_data["chat_id"]} added.")
+            logger.info(f"User {context.user_data['chat_id']} added.")
         else:
-            logger.info(f"User {context.user_data["chat_id"]} already exists.")
+            # User exists, update the language if not available in the database
+            if existing_user.data[0]['language'] is None:
+                (
+                    supabase.table("Users")
+                    .update({"language": context.user_data["language"]})
+                    .eq("chat_id", context.user_data["chat_id"])
+                    .execute()
+                )
+                logger.info(f"Language updated for user {context.user_data['chat_id']}.")
+
+        # Use the language from the database if available, else fallback to Telegram language
+        user_language = (
+            existing_user.data[0]['language']
+            if existing_user.data and existing_user.data[0]['language']
+            else language
+        )
 
         # Reply to the user
         await update.message.reply_text(
-            await main_menu_message(context.user_data["name"], language),
-            reply_markup=await main_menu_keyboard(language),
+            await main_menu_message(context.user_data["name"], user_language),
+            reply_markup=await main_menu_keyboard(user_language),
         )
     except Exception as e:
         logger.error("An error occurred:", e)
+
 
 async def main_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -181,12 +201,13 @@ async def show_wallets(update, context):
         )
 
 async def handle_wallet_selection(update, context):
-    language = await get_language_for_chat_id(update.effective_chat.id)
+    chat_id=update.effective_chat.id
+    language = await get_language_for_chat_id(chat_id)
     query = update.callback_query
     wallet_address = query.data.split("_")[1]  # Extract wallet address from callback data
 
     # Fetch all setups associated with the selected wallet address
-    setups = await fetch_setup_wallet(wallet_address)
+    setups = await fetch_setup_wallet(wallet_address, chat_id)
     alert = await alert_text(language)
 
     if setups.data:
@@ -244,12 +265,13 @@ async def untrack_menu(update, context):
         )
 
 async def handle_untrack_wallet_selection(update, context):
-    language = await get_language_for_chat_id(update.effective_chat.id)
+    chat_id=update.effective_chat.id
+    language = await get_language_for_chat_id(chat_id)
     query = update.callback_query
     wallet_address = query.data.split("_")[2]  # Extract wallet address
 
     # Fetch all setups associated with the selected wallet
-    setups = await fetch_setup_wallet(wallet_address)
+    setups = await fetch_setup_wallet(wallet_address, chat_id)
     alert = await alert_text(language)
     alert_choice_1 = await setup_to_delete_1(language)
     alert_choice_2 = await setup_to_delete_2(language)
@@ -332,7 +354,6 @@ async def handle_deletion_delete_all(update, context):
 TODO:
 - Add more information in the help menu:
     - Where is the data taken.
-- The wallet is the only thing that will be able to be selected. I also need to add that to the remove section -> Wallet selection than a list of all contracts/setups for that wallet.
 """
 
 # STEP 1 : Handle blockchain selection
@@ -356,31 +377,42 @@ async def track_sub_menu_1(update, context):
     # Fetch wallets associated with the user from the database
     user_wallets = await fetch_wallets_user(context.user_data["chat_id"])
 
-    if user_wallets.count > 0:
-        # User has existing wallets, display them in a menu
-        wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
-        buttons = []
+    user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-        # Generate buttons two by two
-        for i in range(0, len(wallets_data), 2):
-            row = []
-            for j in range(2):
-                if i + j < len(wallets_data):
-                    wallet = wallets_data[i + j]
-                    row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
-            buttons.append(row)
+    if user_setups.count <= 10:
+        if user_wallets.count > 0:
+            # User has existing wallets, display them in a menu
+            wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
+            buttons = []
 
-        buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
+            # Generate buttons two by two
+            for i in range(0, len(wallets_data), 2):
+                row = []
+                for j in range(2):
+                    if i + j < len(wallets_data):
+                        wallet = wallets_data[i + j]
+                        row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
+                buttons.append(row)
 
-        reply_markup = InlineKeyboardMarkup(buttons)
+            buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
 
-        await query.answer()
-        await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup(buttons)
+
+            await query.answer()
+            await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
+        else:
+            # If user doesn't have any wallets, prompt them to add a new wallet
+            await query.answer()
+            print(language)
+            await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
     else:
-        # If user doesn't have any wallets, prompt them to add a new wallet
-        await query.answer()
-        print(language)
-        await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
+        message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
+
+        await asyncio.sleep(10)
+        await context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=message.message_id
+        )
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -432,14 +464,35 @@ async def prompt_wallet_address_input(update, context, selected_blockchain):
 
 # STEP 2 : Handle wallet address input
 async def handle_messages(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
     if context.user_data.get("is_entering_wallet_name", False):
         await handle_wallet_name(update, context)
     elif context.user_data.get("is_entering_trigger_point", False):
         await handle_trigger_point(update, context)
     elif context.user_data.get("is_entering_contract_address", False):
         await handle_contract_address(update, context)
-    else:
+    elif "blockchain" in context.user_data:
+        # Only proceed with handling wallet address if blockchain key is present
         await handle_wallet_address(update, context)
+    else:
+        # Handle other cases or send a message informing the user
+        message = await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text= await use_buttons(language),
+        )
+
+        user_input_message_id = update.message.message_id
+        # Delete the message after x seconds (e.g., 10 seconds)
+        await asyncio.sleep(3)
+        await context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=message.message_id
+        )
+        await context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=user_input_message_id
+        )
+
 
 # STEP 3 : Name the wallet.
 async def naming_wallet_selection(update, context):
@@ -693,6 +746,8 @@ async def prompt_tracked_wallet(update, context):
         reply_markup=await back_to_to_main_keyboard(language),
     )
 
+    context.user_data.clear()
+
 ############################ Settings Menus ####################################
 
 async def settings_menu(update, context):
@@ -731,6 +786,18 @@ async def language_selection(update, context):
         text=await language_selection_message(context.user_data["language"]),
         reply_markup=await language_keyboard(context.user_data["language"]),
     )
+
+## Subscriptions
+
+async def subscription_menu(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        text=await subscription_explanation(language),
+        reply_markup=await back_to_settings_menu(language),
+    )
+
 
 if __name__ == "__main__":
     print("Starting bot ...")
@@ -777,6 +844,10 @@ if __name__ == "__main__":
     application.add_handler(
         CallbackQueryHandler(settings_menu, pattern="settings_menu")
     )
+    application.add_handler(
+        CallbackQueryHandler(subscription_menu, pattern="subscriptions_menu")
+    )
+    
     application.add_handler(
         CallbackQueryHandler(language_selection_menu, pattern="language_menu")
     )

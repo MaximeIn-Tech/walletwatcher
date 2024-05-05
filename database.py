@@ -100,13 +100,14 @@ async def fetch_setups_user(chat_id):
         return None  # Return None in case of any errors
 
 
-async def fetch_setup_wallet(wallet_address):
+async def fetch_setup_wallet(wallet_address, chat_id):
     supabase = connect_to_database()
     try:
         setup_number = (
             supabase.table("Setups")
             .select("*", count="exact")
             .eq("wallet_address", wallet_address)
+            .eq("chat_id", chat_id)
             .execute()
         )
 

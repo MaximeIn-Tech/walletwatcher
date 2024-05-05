@@ -249,6 +249,24 @@ async def alert_text(user_language):
         return f"Alert"
 
 
+async def use_buttons(user_language):
+    if user_language == "fr":
+        return f"Veuillez utiliser les boutons du menu."
+    elif user_language == "es":
+        return f"Por favor, utiliza los botones del menú."
+    else:
+        return f"Please use the menu's buttons."
+
+
+async def too_many_setups(user_language):
+    if user_language == "fr":
+        return f"Vous avez atteint la limite de 10 alertes gratuites. Pour en ajouter plus, supprimez-en une existante ou abonnez-vous."
+    elif user_language == "es":
+        return f"Has alcanzado el límite de 10 alertas gratuitas. Para añadir más, elimina una existente o suscríbete."
+    else:
+        return f"You've reached the limit of 10 free alerts. To add more, delete an existing one or subscribe."
+
+
 ##### DELETE SECTION
 
 
@@ -297,7 +315,18 @@ async def setup_to_delete_2(user_language):
         return f"Please select one you want to delete."
 
 
-####
+############# Subscriptions Menus ######################
+
+
+async def subscription_explanation(user_language):
+    if user_language == "fr":
+        return f"Pour le moment, vous pouvez avoir jusqu'à 10 alertes dans la version gratuite. D'autres abonnements seront disponibles bientôt..."
+    elif user_language == "es":
+        return f"Por ahora, puedes tener hasta 10 alertas en la versión gratuita. ¡Más suscripciones próximamente..."
+    else:
+        return f"You can have up to 10 alerts for now while on the free version. More subscriptions to come..."
+
+
 async def tracked_wallet_setup_message(
     wallet_name,
     blockchain,
