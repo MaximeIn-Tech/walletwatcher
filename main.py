@@ -82,6 +82,13 @@ PREDEFINED_TOKENS = {
     "bsc": [{"symbol": "BNB", "contract_address": None}],
 }
 
+############################ Utilities  #########################################
+
+async def delete_message_after_delay(bot, chat_id, message_id, delay):
+    await asyncio.sleep(delay)
+    await bot.delete_message(chat_id=chat_id, message_id=message_id)
+
+
 ############################ Bot Menus #########################################
 
 async def start(update, context):
@@ -369,6 +376,8 @@ async def add_wallet(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
+
+
 async def track_sub_menu_1(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -408,11 +417,8 @@ async def track_sub_menu_1(update, context):
     else:
         message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
 
-        await asyncio.sleep(10)
-        await context.bot.delete_message(
-            chat_id=update.effective_chat.id,
-            message_id=message.message_id
-        )
+        # Use ensure_future to asynchronously delete the message after a delay
+        asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
