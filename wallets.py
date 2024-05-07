@@ -48,6 +48,30 @@ def fetch_theta_single_wallet_balance(wallet_address, contract_address):
         return None
 
 
+def fetch_theta_tfuel_balance(wallet_address):
+    url = f"http://www.thetascan.io/api/balance/?address={wallet_address}"
+
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            data = response.json()
+
+            theta_balance = data["theta"]
+            tfuel_balance = data["tfuel"]
+
+            return theta_balance, tfuel_balance
+
+        else:
+            print(f"Failed to retrieve data. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
 def fetch_theta_stake(wallet_address):
     url = f"https://explorer-api.thetatoken.org/api/stake/{wallet_address}?types[]=vcp&types[]=gcp&types[]=eenp"
 
@@ -160,6 +184,9 @@ def fetch_bnb_balance_multiple_addresses(wallet_addresses):
 
 # TODO : Function to check the token symbol and interact depending on that with multiple different calls.
 
+
 ######################################## OVERALL CHECK #############################################
-# def fetch_wallet_balance(blockchain, wallet_address, contract_address):
-#     if blockchain == "THETA":
+def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_address):
+    if blockchain == "THETA":
+        if token_symbol == "Theta" | "TFUEL":
+            theta_balance, tfuel_balance = fetch_theta_tfuel_balance(wallet_address)

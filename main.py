@@ -219,12 +219,15 @@ async def handle_wallet_selection(update, context):
 
     if setups.data:
         # If setups are found, format them and send to the user
-        formatted_setups = "\n".join([f"""{alert} {n}:               
-Blockchain: {setup["blockchain"]}
-Token: {setup['token_symbol']}
-Contract Address: {setup['contract_address']}
-Trigger Point: {setup["trigger_point"]}
-""" for n, setup in enumerate(setups.data, start=1)])
+        formatted_setups = "\n".join([
+    f"""{alert} {n}:              
+Blockchain: {setup["blockchain"]}\n"""
+    + (f"Token: {setup['token_symbol']}\n" if setup['token_symbol'] is not None else '')
+    + (f"Contract Address: {setup['contract_address']}\n" if setup['contract_address'] is not None else '')
+    + (f"Trigger Point: {setup['trigger_point']}\n" if setup['trigger_point'] is not None else '')
+    for n, setup in enumerate(setups.data, start=1)
+])
+
         await query.answer()
         await query.edit_message_text(
             text=await setups_found(language, formatted_setups, wallet_address),
@@ -246,13 +249,13 @@ async def generate_setup_buttons_and_alerts(setups, language, alert):
 
     for index, setup in enumerate(setups.data, start=1):
         buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
-        alerts_to_display.append(f"""{alert} {index}:
-Blockchain: {setup["blockchain"]}
-Token: {setup['token_symbol']}
-Contract Address: {setup['contract_address']}
-Trigger Point: {setup["trigger_point"]}
-""")
-
+        alerts_to_display.append(
+    f"""{alert} {index}:
+Blockchain: {setup["blockchain"]}"""
+    + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
+    + (f"\nContract Address: {setup['contract_address']}" if setup['contract_address'] is not None else '')
+    + (f"\nTrigger Point: {setup['trigger_point']}\n" if setup['trigger_point'] is not None else '')
+)
     buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
     reply_markup = InlineKeyboardMarkup(buttons)
     formatted_setups = "\n".join(alerts_to_display)
@@ -591,6 +594,7 @@ async def handle_selected_token(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     selected_token = query.data.split("_")[0]  # Extract selected token symbol
+    print (selected_token)
     selected_blockchain = context.user_data.get("blockchain", "").lower()
     predefined_tokens = PREDEFINED_TOKENS.get(selected_blockchain, [])
 
@@ -609,24 +613,38 @@ async def handle_selected_token(update, context):
         if selected_token_info:
             selected_symbol = selected_token_info["symbol"]
             contract_address = selected_token_info["contract_address"]
-            await query.answer(
-                f"You selected {selected_symbol} with contract address {contract_address}"
-            )
             # Now you can use selected_symbol and contract_address as needed
             # For example, store them in user_data
             context.user_data["selected_symbol"] = selected_symbol
             context.user_data["contract_address"] = contract_address
+            context.user_data["blockchain"] = selected_blockchain.capitalize()
 
             # Check if the selected blockchain is Theta and the selected token is "Stake Watch"
             if (
-                selected_blockchain == "theta"
-                and selected_symbol.lower() == "stake watch"
+                selected_blockchain == "Theta"
+                and selected_symbol == "Stake Watch"
             ):
+                print (select_token_symbol)
                 await context.bot.send_message(
                     chat_id=update.callback_query.message.chat_id,
                     text=await stake_message(language),
                     reply_markup=await back_to_to_main_keyboard(language),
                 )
+                data = (
+                supabase.table("Setups")
+                .insert(
+                    {
+                        "chat_id": context.user_data["chat_id"],
+                        "wallet_address": context.user_data["wallet_address"],
+                        "blockchain": selected_blockchain,
+                        "contract_address": contract_address,
+                        "token_symbol": selected_symbol,
+                        "trigger_point": None,
+                        "balance": None,
+                    }
+                )
+                .execute()
+            )
             else:
                 # Proceed with trigger point prompt
                 await prompt_trigger_point(update, context)

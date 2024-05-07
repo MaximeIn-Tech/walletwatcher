@@ -341,27 +341,33 @@ async def tracked_wallet_setup_message(
         message += f"Nom du portefeuille : {wallet_name}\n"
         message += f"Blockchain : {blockchain}\n"
         message += f"Adresse du portefeuille : {wallet_address}\n"
-        message += f"Symbole du jeton : {symbol}\n"
+        if symbol is not None:
+            message += f"Symbole du jeton : {symbol}\n"
         if contract_address is not None:
             message += f"Adresse du contrat : {contract_address}\n"
-        message += f"Point de déclenchement : {trigger_point}"
+        if trigger_point is not None:
+            message += f"Point de déclenchement : {trigger_point}"
     elif language == "es":
         message = f"Configuración del monedero rastreado:\n\n"
         message += f"Nombre del monedero: {wallet_name}\n"
         message += f"Blockchain: {blockchain}\n"
         message += f"Dirección del monedero: {wallet_address}\n"
-        message += f"Símbolo del token: {symbol}\n"
+        if symbol is not None:
+            message += f"Símbolo del token: {symbol}\n"
         if contract_address is not None:
             message += f"Dirección del contrato: {contract_address}\n"
-        message += f"Punto de activación: {trigger_point}"
+        if trigger_point is not None:
+            message += f"Punto de activación: {trigger_point}"
     else:  # English
         message = f"Tracked wallet setup:\n\n"
         message += f"Wallet Name: {wallet_name}\n"
         message += f"Blockchain: {blockchain}\n"
         message += f"Wallet Address: {wallet_address}\n"
-        message += f"Token Symbol: {symbol}\n"
+        if symbol is not None:
+            message += f"Token Symbol: {symbol}\n"
         if contract_address is not None:
             message += f"Contract Address: {contract_address}\n"
-        message += f"Trigger Point: {trigger_point}"
+        if trigger_point is not None:
+            message += f"Trigger Point: {trigger_point}"
 
     return message
