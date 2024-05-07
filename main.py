@@ -682,6 +682,9 @@ async def prompt_tracked_wallet(update, context):
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
 
+    if symbol is None:
+        symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
+
     # Check if the wallet exists
     existing_wallets = (
         supabase.table("Wallets")

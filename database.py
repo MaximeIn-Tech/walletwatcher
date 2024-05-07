@@ -136,3 +136,30 @@ async def remove_all_from_db(chat_id):
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
+
+
+def fetch_token_symbol_for_contract(blockchain, contract_address):
+    supabase = connect_to_database()
+    try:
+        data = (
+            supabase.table("Contracts")
+            .select("token_symbol")
+            .ilike("blockchain", blockchain)
+            .ilike("contract_address", contract_address)
+            .execute()
+        )
+        return data.data[0]["token_symbol"]
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
+
+
+def main():
+    blockchain = "Theta"
+    contract_address = "0x6f20254c45f55a7aecdb54d5cd97a94e868eb135"
+    fetch_token_symbol_for_contract(blockchain, contract_address)
+
+
+if __name__ == "__main__":
+
+    main()
