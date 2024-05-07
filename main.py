@@ -240,6 +240,25 @@ Trigger Point: {setup["trigger_point"]}
 
 ########################## Remove Wallet #######################################
 
+async def generate_setup_buttons_and_alerts(setups, language, alert):
+    buttons = []
+    alerts_to_display = []
+
+    for index, setup in enumerate(setups.data, start=1):
+        buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
+        alerts_to_display.append(f"""{alert} {index}:
+Blockchain: {setup["blockchain"]}
+Token: {setup['token_symbol']}
+Contract Address: {setup['contract_address']}
+Trigger Point: {setup["trigger_point"]}
+""")
+
+    buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
+    reply_markup = InlineKeyboardMarkup(buttons)
+    formatted_setups = "\n".join(alerts_to_display)
+    
+    return reply_markup, formatted_setups
+
 async def untrack_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -283,26 +302,9 @@ async def handle_untrack_wallet_selection(update, context):
     alert = await alert_text(language)
     alert_choice_1 = await setup_to_delete_1(language)
     alert_choice_2 = await setup_to_delete_2(language)
+
     if setups.data:
-        buttons = []
-        alerts_to_display = []  # List to hold the alerts to be displayed
-
-        # Generate buttons for each setup
-        for index, setup in enumerate(setups.data, start=1):
-            buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
-            alerts_to_display.append(f"""{alert} {index}:
-Blockchain: {setup["blockchain"]}
-Token: {setup['token_symbol']}
-Contract Address: {setup['contract_address']}
-Trigger Point: {setup["trigger_point"]}
-""")
-
-        buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
-
-        reply_markup = InlineKeyboardMarkup(buttons)
-
-        # Generate the recap of all setups for the user excluding the deleted alert
-        formatted_setups = "\n".join(alerts_to_display)
+        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(setups, language, alert)
 
         await query.answer()
         await query.edit_message_text(
@@ -318,51 +320,6 @@ Trigger Point: {setup["trigger_point"]}
             reply_markup=await back_to_list_wallets(language),
         )
         return None
-
-
-# async def handle_untrack_wallet_selection(update, context):
-#     chat_id=update.effective_chat.id
-#     language = await get_language_for_chat_id(chat_id)
-#     query = update.callback_query
-#     wallet_address = query.data.split("_")[2]  # Extract wallet address
-
-#     # Fetch all setups associated with the selected wallet
-#     setups = await fetch_setup_wallet(wallet_address, chat_id)
-#     alert = await alert_text(language)
-#     alert_choice_1 = await setup_to_delete_1(language)
-#     alert_choice_2 = await setup_to_delete_2(language)
-#     if setups.data:
-#         buttons = []
-#         # Generate buttons for each setup
-#         for index, setup in enumerate(setups.data, start=1):
-#             buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
-
-#         buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
-
-#         reply_markup = InlineKeyboardMarkup(buttons)
-
-#         # Generate the recap of all setups for the user
-#         formatted_setups = "\n".join([f"""{alert} {n}:
-# Blockchain: {setup["blockchain"]}
-# Token: {setup['token_symbol']}
-# Contract Address: {setup['contract_address']}
-# Trigger Point: {setup["trigger_point"]}
-# """ for n, setup in enumerate(setups.data, start=1)])
-
-#         await query.answer()
-#         await query.edit_message_text(
-#             text=f"{alert_choice_1}\n\n{formatted_setups}\n\n{alert_choice_2}",
-#             reply_markup=reply_markup,
-#         )
-
-#         return reply_markup
-#     else:
-#         await query.answer()
-#         await query.edit_message_text(
-#             text=await no_setups_found(language),
-#             reply_markup=await back_to_list_wallets(language),
-#         )
-#         return None
 
 async def delete_alert(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -380,23 +337,7 @@ async def delete_alert(update, context):
     alert_choice_2 = await setup_to_delete_2(language)
 
     if setups.data:
-        buttons = []
-        alerts_to_display = []
-
-        # Generate buttons for each setup
-        for index, setup in enumerate(setups.data, start=1):
-            buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
-            alerts_to_display.append(f"""{alert} {index}:
-Blockchain: {setup["blockchain"]}
-Token: {setup['token_symbol']}
-Contract Address: {setup['contract_address']}
-Trigger Point: {setup["trigger_point"]}
-""")
-
-        buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
-
-        reply_markup = InlineKeyboardMarkup(buttons)
-        formatted_setups = "\n".join(alerts_to_display)
+        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(setups, language, alert)
 
         await query.edit_message_text(
             text=f"{alert_choice_1}\n\n{formatted_setups}\n\n{alert_choice_2}",
