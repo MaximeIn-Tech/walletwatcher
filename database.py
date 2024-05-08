@@ -154,12 +154,29 @@ def fetch_token_symbol_for_contract(blockchain, contract_address):
         return None  # Return None in case of any errors
 
 
-def main():
-    blockchain = "Theta"
-    contract_address = "0x6f20254c45f55a7aecdb54d5cd97a94e868eb135"
-    fetch_token_symbol_for_contract(blockchain, contract_address)
+def fetch_decimal_for_contract(blockchain, contract_address):
+    supabase = connect_to_database()
+    try:
+        data = (
+            supabase.table("Contracts")
+            .select("decimal")
+            .ilike("blockchain", blockchain)
+            .ilike("contract_address", contract_address)
+            .execute()
+        )
+        return data.data[0]["decimal"]
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
 
 
-if __name__ == "__main__":
+# def main():
+#     blockchain = "Theta"
+#     contract_address = "0x6f20254c45f55a7aecdb54d5cd97a94e868eb135"
+#     decimal = fetch_decimal_for_contract(blockchain, contract_address)
+#     print(f"Decimal for {contract_address} is {decimal}")
 
-    main()
+
+# if __name__ == "__main__":
+
+#     main()

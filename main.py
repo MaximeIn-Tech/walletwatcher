@@ -20,6 +20,7 @@ from telegram.ext import (
 from database import *
 from menus import *
 from messages import *
+from wallets import *
 
 load_dotenv()
 
@@ -219,18 +220,12 @@ async def handle_wallet_selection(update, context):
 
     if setups.data:
         # If setups are found, format them and send to the user
-        formatted_setups = "\n".join([
-    f"""{alert} {n}:              
-Blockchain: {setup["blockchain"]}\n"""
-    + (f"Token: {setup['token_symbol']}\n" if setup['token_symbol'] is not None else '')
-    + (f"Contract Address: {setup['contract_address']}\n" if setup['contract_address'] is not None else '')
-    + (f"Trigger Point: {setup['trigger_point']}\n" if setup['trigger_point'] is not None else '')
-    for n, setup in enumerate(setups.data, start=1)
-])
+        alert = await alert_text(language)
+        formatted_message = generate_formatted_setups(setups, alert, language)
 
         await query.answer()
         await query.edit_message_text(
-            text=await setups_found(language, formatted_setups, wallet_address),
+            text=await setups_found(language, formatted_message, wallet_address),
             reply_markup=await back_to_list_wallets(language),
         )
     else:
@@ -246,21 +241,59 @@ Blockchain: {setup["blockchain"]}\n"""
 async def generate_setup_buttons_and_alerts(setups, language, alert):
     buttons = []
     alerts_to_display = []
-
+    alert = await alert_text(language)
+    row = []
     for index, setup in enumerate(setups.data, start=1):
-        buttons.append([InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}")])
-        alerts_to_display.append(
-    f"""{alert} {index}:
+        row.append(InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}"))
+        if len(row) == 2:  # Two buttons per row
+            buttons.append(row)
+            row = []  # Reset the row for the next pair of buttons
+        if language == "fr":
+            alerts_to_display.append(
+                f"""\n{alert} {index}:
+Blockchain : {setup["blockchain"]}"""
+                + (f"\nToken : {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
+                + (f"\nContract Address : {setup['contract_address']}" if setup['contract_address'] is not None else '')
+                + (f"\nSeuil de déclenchement : {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
+                + (f"\nSolde actuelle : {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+            )
+        elif language == "es":
+            alerts_to_display.append(
+                f"""\n{alert} {index}:
 Blockchain: {setup["blockchain"]}"""
-    + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
-    + (f"\nContract Address: {setup['contract_address']}" if setup['contract_address'] is not None else '')
-    + (f"\nTrigger Point: {setup['trigger_point']}\n" if setup['trigger_point'] is not None else '')
-)
-    buttons.append([InlineKeyboardButton("Cancel", callback_data="remove_wallet_menu")])
+                + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
+                + (f"\nDirección del Contrato: {setup['contract_address']}" if setup['contract_address'] is not None else '')
+                + (f"\nPunto de Activación: {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
+                + (f"\nSaldo: {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+            )
+        # Add more language conditions as needed
+        else:
+            # Default to English if language not specified or recognized
+            alerts_to_display.append(
+                f"""\n{alert} {index}:
+Blockchain: {setup["blockchain"]}"""
+                + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
+                + (f"\nContract Address: {setup['contract_address']}" if setup['contract_address'] is not None else '')
+                + (f"\nTrigger Point: {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
+                + (f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+            )
+    # Add the last row if it has any buttons
+    if row:
+        buttons.append(row)
+    if language == "fr":
+        cancel_text = "Annuler"
+    elif language == "es":
+        cancel_text = "Cancelar"
+    else:
+        cancel_text = "Cancel"
+
+    buttons.append([InlineKeyboardButton(cancel_text, callback_data="remove_wallet_menu")])
     reply_markup = InlineKeyboardMarkup(buttons)
     formatted_setups = "\n".join(alerts_to_display)
     
     return reply_markup, formatted_setups
+
+
 
 async def untrack_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -719,15 +752,16 @@ async def handle_trigger_point(update, context):
     await prompt_tracked_wallet(update, context)
 
 # COMPLETED:
-
+#TODO : Fetch the initial balance and add it to the setup
 async def prompt_tracked_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     blockchain = context.user_data.get("blockchain")
     wallet_address = context.user_data.get("wallet_address")
     wallet_name = context.user_data.get("wallet_name")
-    symbol = context.user_data.get("selected_symbol")
+    symbol = context.user_data.get("selected_symbol").capitalize()
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
+    balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
 
     if symbol is None:
         symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
@@ -770,7 +804,7 @@ async def prompt_tracked_wallet(update, context):
                 "contract_address": contract_address,
                 "token_symbol": symbol,
                 "trigger_point": trigger_point,
-                "balance": None,
+                "balance": balance,
             }
         )
         .execute()
@@ -779,7 +813,7 @@ async def prompt_tracked_wallet(update, context):
 
     count = await fetch_setups_user(context.user_data["chat_id"])
     logger.info (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
-
+    print(f"Blockchain is {blockchain} and token symbol is {symbol} and balance is {balance}")
     message = await tracked_wallet_setup_message(
         wallet_name,
         blockchain,
@@ -787,6 +821,7 @@ async def prompt_tracked_wallet(update, context):
         symbol,
         contract_address,
         trigger_point,
+        balance,
         language,
     )
 

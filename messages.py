@@ -159,7 +159,7 @@ async def contract_address_error(user_language: str):
 
 async def trigger_point_selection(user_language: str):
     if user_language == "fr":
-        return "Veuillez entrer le point de déclenchement <i>(choisissez 0 si vous voulez voir chaque mise à jour)</i> :"
+        return "Veuillez entrer le seuil de déclenchement <i>(choisissez 0 si vous voulez voir chaque mise à jour)</i> :"
     elif user_language == "es":
         return "Por favor, ingresa el punto de activación <i>(elige 0 si deseas ver cada actualización)</i>:"
     else:
@@ -168,7 +168,7 @@ async def trigger_point_selection(user_language: str):
 
 async def trigger_point_saved(user_language: str, trigger_point):
     if user_language == "fr":
-        return f"Point de déclenchement {trigger_point} enregistré."
+        return f"Seuil de déclenchement {trigger_point} enregistré."
     elif user_language == "es":
         return f"Punto de activación {trigger_point} guardado."
     else:
@@ -177,7 +177,7 @@ async def trigger_point_saved(user_language: str, trigger_point):
 
 async def trigger_point_error(user_language: str):
     if user_language == "fr":
-        return "Veuillez entrer un point de déclenchement valide."
+        return "Veuillez entrer un seuil de déclenchement valide."
     elif user_language == "es":
         return "Por favor, ingresa un punto de activación válido."
     else:
@@ -334,6 +334,7 @@ async def tracked_wallet_setup_message(
     symbol,
     contract_address,
     trigger_point,
+    balance,
     language,
 ):
     if language == "fr":
@@ -346,7 +347,9 @@ async def tracked_wallet_setup_message(
         if contract_address is not None:
             message += f"Adresse du contrat : {contract_address}\n"
         if trigger_point is not None:
-            message += f"Point de déclenchement : {trigger_point}"
+            message += f"Seuil de déclenchement : {trigger_point}\n"
+        if balance is not None:
+            message += f"Votre solde actuel est : {balance} {symbol}"
     elif language == "es":
         message = f"Configuración del monedero rastreado:\n\n"
         message += f"Nombre del monedero: {wallet_name}\n"
@@ -357,7 +360,9 @@ async def tracked_wallet_setup_message(
         if contract_address is not None:
             message += f"Dirección del contrato: {contract_address}\n"
         if trigger_point is not None:
-            message += f"Punto de activación: {trigger_point}"
+            message += f"Punto de activación: {trigger_point}\n"
+        if balance is not None:
+            message += f"Tu saldo actual es: {balance} {symbol}"
     else:  # English
         message = f"Tracked wallet setup:\n\n"
         message += f"Wallet Name: {wallet_name}\n"
@@ -368,6 +373,59 @@ async def tracked_wallet_setup_message(
         if contract_address is not None:
             message += f"Contract Address: {contract_address}\n"
         if trigger_point is not None:
-            message += f"Trigger Point: {trigger_point}"
+            message += f"Trigger Point: {trigger_point}\n"
+        if balance is not None:
+            message += f"Your current balance is : {balance} {symbol}"
 
     return message
+
+
+def generate_formatted_setups(setups, alert, user_language):
+    formatted_setups = ""
+    for n, setup in enumerate(setups.data, start=1):
+        if user_language == "fr":
+            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"\nBlockchain: {setup['blockchain']}"
+            if setup["token_symbol"] is not None:
+                formatted_setups += f"\nToken: {setup['token_symbol']}"
+            if setup["contract_address"] is not None:
+                formatted_setups += f"\nContract Address: {setup['contract_address']}"
+            if setup["trigger_point"] is not None:
+                formatted_setups += (
+                    f"\nSeuil de déclenchement: {setup['trigger_point']}"
+                )
+            if setup["balance"] is not None:
+                formatted_setups += (
+                    f"\nSolde actuel: {setup['balance']} {setup['token_symbol']}"
+                )
+        elif user_language == "es":
+            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"\nBlockchain: {setup['blockchain']}"
+            if setup["token_symbol"] is not None:
+                formatted_setups += f"T\noken: {setup['token_symbol']}"
+            if setup["contract_address"] is not None:
+                formatted_setups += (
+                    f"\nDirección del Contrato: {setup['contract_address']}"
+                )
+            if setup["trigger_point"] is not None:
+                formatted_setups += f"\nPunto de Activación: {setup['trigger_point']}"
+            if setup["balance"] is not None:
+                formatted_setups += (
+                    f"\nSaldo: {setup['balance']} {setup['token_symbol']}"
+                )
+        # Add more language conditions as needed
+        else:
+            # Default to English if language not specified or recognized
+            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"\nBlockchain: {setup['blockchain']}"
+            if setup["token_symbol"] is not None:
+                formatted_setups += f"\nToken: {setup['token_symbol']}"
+            if setup["contract_address"] is not None:
+                formatted_setups += f"\nContract Address: {setup['contract_address']}"
+            if setup["trigger_point"] is not None:
+                formatted_setups += f"\nTrigger Point: {setup['trigger_point']}"
+            if setup["balance"] is not None:
+                formatted_setups += (
+                    f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}"
+                )
+    return formatted_setups

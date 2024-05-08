@@ -4,8 +4,12 @@ import os
 import requests
 from dotenv import load_dotenv
 
+from database import fetch_decimal_for_contract
+
 load_dotenv()
 
+ethapikey = os.getenv("ETH_API°KEY")
+bscapikey = os.getenv("BSC_API°KEY")
 
 ###################################### THETA BLOCKCHAIN ############################################
 # TODO: Limiter les calls pour Thetascan à 2 par secondes
@@ -39,6 +43,8 @@ def fetch_theta_single_wallet_balance(wallet_address, contract_address):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             data = response.json()
+            balance = data["balance"]
+            return balance
 
         else:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
@@ -48,7 +54,7 @@ def fetch_theta_single_wallet_balance(wallet_address, contract_address):
         return None
 
 
-def fetch_theta_tfuel_balance(wallet_address):
+def fetch_theta_balance(wallet_address):
     url = f"http://www.thetascan.io/api/balance/?address={wallet_address}"
 
     try:
@@ -60,9 +66,31 @@ def fetch_theta_tfuel_balance(wallet_address):
             data = response.json()
 
             theta_balance = data["theta"]
+
+            return theta_balance
+
+        else:
+            print(f"Failed to retrieve data. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def fetch_tfuel_balance(wallet_address):
+    url = f"http://www.thetascan.io/api/balance/?address={wallet_address}"
+
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            data = response.json()
+
             tfuel_balance = data["tfuel"]
 
-            return theta_balance, tfuel_balance
+            return tfuel_balance
 
         else:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
@@ -98,7 +126,26 @@ def fetch_theta_stake(wallet_address):
 ethapikey = os.getenv("ETH_API_KEY")
 
 
-def fetch_eth_balance_multiple_addresses(wallet_addresses):
+def fetch_eth_token_balance(wallet_address):
+    url = f"https://api.etherscan.com/api?module=account&action=balance&address={wallet_address}&apikey={ethapikey}"
+
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            data = response.json()
+
+        else:
+            print(f"Failed to retrieve data. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def fetch_eth_token_balance_multiple_addresses(wallet_addresses):
     url = f"https://api.bscscan.com/api?module=account&action=balancemulti&address={wallet_addresses}&tag=latest&apikey={ethapikey}"
 
     try:
@@ -163,8 +210,27 @@ def fetch_bsc_single_wallet_balance(wallet_addresse, contract_address):
         return None
 
 
-def fetch_bnb_balance_multiple_addresses(wallet_addresses):
+def fetch_bnb_token_balance_multiple_addresses(wallet_addresses):
     url = f"https://api.etherscan.io/api?module=account&action=balancemulti&address={wallet_addresses}&tag=latest&apikey={bscapikey}"
+
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            data = response.json()
+
+        else:
+            print(f"Failed to retrieve data. Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def fetch_bnb_token_balance(wallet_address):
+    url = f"https://api.bscscan.com/api?module=account&action=balance&address={wallet_address}&apikey={bscapikey}"
 
     try:
         # Send a GET request to the URL
@@ -187,6 +253,34 @@ def fetch_bnb_balance_multiple_addresses(wallet_addresses):
 
 ######################################## OVERALL CHECK #############################################
 def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_address):
-    if blockchain == "THETA":
-        if token_symbol == "Theta" | "TFUEL":
-            theta_balance, tfuel_balance = fetch_theta_tfuel_balance(wallet_address)
+    if blockchain == "Theta":
+        if token_symbol == "Theta":
+            balance = fetch_theta_balance(wallet_address)
+            return balance
+        elif token_symbol == "Tfuel":
+            balance = fetch_tfuel_balance(wallet_address)
+            return balance
+        else:
+            fetch_theta_single_wallet_balance(wallet_address, contract_address)
+    elif blockchain == "Eth":
+        if token_symbol == "Eth":
+            balance = fetch_eth_token_balance(wallet_address)
+            return balance
+        else:
+            decimal = fetch_decimal_for_contract("ETH", contract_address)
+            balance = fetch_bsc_single_wallet_balance(wallet_address, contract_address)
+            balance = balance * (10**-decimal)
+            return balance
+    elif blockchain == "Bsc":
+        if token_symbol == "Bnb":
+            balance = fetch_bnb_token_balance(wallet_address)
+            return balance
+        else:
+            decimal = fetch_decimal_for_contract("BSC", contract_address)
+            balance = fetch_bsc_single_wallet_balance(wallet_address, contract_address)
+            balance = balance * (10**-decimal)
+            return balance
+
+
+# def main():
+#     fetch
