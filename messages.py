@@ -233,11 +233,11 @@ async def no_setups_found(user_language: str):
 
 async def setups_found(user_language, formatted_setups, wallet_address):
     if user_language == "fr":
-        return f"Alertes pour le portefeuille sélectionné :\n{wallet_address}\n\n{formatted_setups}\n"
+        return f"Alertes pour le portefeuille sélectionné :\n{wallet_address}\n\n{formatted_setups}"
     elif user_language == "es":
-        return f"Alertas para el monedero seleccionado :\n{wallet_address}\n\n{formatted_setups}\n"
+        return f"Alertas para el monedero seleccionado :\n{wallet_address}\n\n{formatted_setups}"
     else:
-        return f"Alerts for selected wallet:\n{wallet_address}\n\n{formatted_setups}\n"
+        return f"Alerts for selected wallet:\n{wallet_address}\n\n{formatted_setups}"
 
 
 async def alert_text(user_language):
@@ -343,6 +343,7 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain : {blockchain}\n"
         message += f"Adresse du portefeuille : {wallet_address}\n"
         if symbol is not None:
+            symbol = symbol.capitalize()
             message += f"Symbole du jeton : {symbol}\n"
         if contract_address is not None:
             message += f"Adresse du contrat : {contract_address}\n"
@@ -356,6 +357,7 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain: {blockchain}\n"
         message += f"Dirección del monedero: {wallet_address}\n"
         if symbol is not None:
+            symbol = symbol.capitalize()
             message += f"Símbolo del token: {symbol}\n"
         if contract_address is not None:
             message += f"Dirección del contrato: {contract_address}\n"
@@ -369,6 +371,7 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain: {blockchain}\n"
         message += f"Wallet Address: {wallet_address}\n"
         if symbol is not None:
+            symbol = symbol.capitalize()
             message += f"Token Symbol: {symbol}\n"
         if contract_address is not None:
             message += f"Contract Address: {contract_address}\n"
@@ -383,6 +386,7 @@ async def tracked_wallet_setup_message(
 def generate_formatted_setups(setups, alert, user_language):
     formatted_setups = ""
     for n, setup in enumerate(setups.data, start=1):
+
         if user_language == "fr":
             formatted_setups += f"\n{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
@@ -398,8 +402,9 @@ def generate_formatted_setups(setups, alert, user_language):
                 formatted_setups += (
                     f"\nSolde actuel: {setup['balance']} {setup['token_symbol']}"
                 )
+            formatted_setups += "\n\n"
         elif user_language == "es":
-            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
             if setup["token_symbol"] is not None:
                 formatted_setups += f"T\noken: {setup['token_symbol']}"
@@ -413,10 +418,11 @@ def generate_formatted_setups(setups, alert, user_language):
                 formatted_setups += (
                     f"\nSaldo: {setup['balance']} {setup['token_symbol']}"
                 )
+            formatted_setups += "\n\n"
         # Add more language conditions as needed
         else:
             # Default to English if language not specified or recognized
-            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
             if setup["token_symbol"] is not None:
                 formatted_setups += f"\nToken: {setup['token_symbol']}"
@@ -428,4 +434,5 @@ def generate_formatted_setups(setups, alert, user_language):
                 formatted_setups += (
                     f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}"
                 )
+            formatted_setups += "\n\n"
     return formatted_setups

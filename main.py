@@ -95,7 +95,6 @@ async def delete_message_after_delay(bot, chat_id, message_id, delay):
 async def start(update, context):
     try:
         language = update.effective_user.language_code
-        print(language)
         context.user_data["language"] = language
 
         context.user_data["chat_id"] = update.effective_chat.id
@@ -306,11 +305,21 @@ async def untrack_menu(update, context):
     if user_wallets.count > 0:
         wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower())
         buttons = []
+        row = []  # Initialize row for buttons
 
         # Generate buttons for each wallet
         for wallet in wallets_data:
-            buttons.append([InlineKeyboardButton(wallet["wallet_name"], callback_data=f"untrack_wallet_{wallet['wallet_address']}")])
+            # Add button to current row
+            row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"untrack_wallet_{wallet['wallet_address']}"))
+            
+            # If row is full (2 buttons), add it to buttons and start a new row
+            if len(row) == 2:
+                buttons.append(row)
+                row = []
 
+        # If there are remaining buttons in the last row, add it to buttons
+        if row:
+            buttons.append(row)
 
         buttons.append([InlineKeyboardButton("🔙", callback_data="main_menu")])
 
@@ -325,6 +334,7 @@ async def untrack_menu(update, context):
             text=await no_wallets_found(language),
             reply_markup=await back_to_to_main_keyboard(language),
         )
+
 
 async def handle_untrack_wallet_selection(update, context):
     chat_id = update.effective_chat.id
@@ -344,7 +354,7 @@ async def handle_untrack_wallet_selection(update, context):
 
         await query.answer()
         await query.edit_message_text(
-            text=f"{alert_choice_1}\n\n{formatted_setups}\n\n{alert_choice_2}",
+            text=f"{alert_choice_1}\n{formatted_setups}\n\n{alert_choice_2}",
             reply_markup=reply_markup,
         )
 
@@ -400,7 +410,6 @@ async def handle_deletion_delete_all(update, context):
     chat_id = update.effective_chat.id
     query = update.callback_query
     user_response = query.data
-    print("User response:", user_response)  # Check the user's response for debugging
     if user_response == 'yes_delete':
         await remove_all_from_db(chat_id)
         await query.edit_message_text(
@@ -471,7 +480,6 @@ async def track_sub_menu_1(update, context):
         else:
             # If user doesn't have any wallets, prompt them to add a new wallet
             await query.answer()
-            print(language)
             await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
     else:
         message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
@@ -627,7 +635,6 @@ async def handle_selected_token(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     selected_token = query.data.split("_")[0]  # Extract selected token symbol
-    print (selected_token)
     selected_blockchain = context.user_data.get("blockchain", "").lower()
     predefined_tokens = PREDEFINED_TOKENS.get(selected_blockchain, [])
 
@@ -650,14 +657,13 @@ async def handle_selected_token(update, context):
             # For example, store them in user_data
             context.user_data["selected_symbol"] = selected_symbol
             context.user_data["contract_address"] = contract_address
-            context.user_data["blockchain"] = selected_blockchain.capitalize()
+            context.user_data["blockchain"] = selected_blockchain
 
             # Check if the selected blockchain is Theta and the selected token is "Stake Watch"
             if (
-                selected_blockchain == "Theta"
+                selected_blockchain == "THETA"
                 and selected_symbol == "Stake Watch"
             ):
-                print (select_token_symbol)
                 await context.bot.send_message(
                     chat_id=update.callback_query.message.chat_id,
                     text=await stake_message(language),
@@ -755,13 +761,15 @@ async def handle_trigger_point(update, context):
 #TODO : Fetch the initial balance and add it to the setup
 async def prompt_tracked_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
-    blockchain = context.user_data.get("blockchain")
+    blockchain = context.user_data.get("blockchain").upper()
     wallet_address = context.user_data.get("wallet_address")
     wallet_name = context.user_data.get("wallet_name")
-    symbol = context.user_data.get("selected_symbol").capitalize()
+    symbol = context.user_data.get("selected_symbol")
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
-    balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
+    if symbol != "Stake Watch":
+        balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
+
 
     if symbol is None:
         symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
@@ -813,7 +821,8 @@ async def prompt_tracked_wallet(update, context):
 
     count = await fetch_setups_user(context.user_data["chat_id"])
     logger.info (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
-    print(f"Blockchain is {blockchain} and token symbol is {symbol} and balance is {balance}")
+    blockchain = blockchain.capitalize()
+    wallet_address = wallet_address.lower()
     message = await tracked_wallet_setup_message(
         wallet_name,
         blockchain,
