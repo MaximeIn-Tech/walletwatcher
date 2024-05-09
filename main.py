@@ -713,12 +713,16 @@ async def handle_contract_address(update, context):
 # STEP 6: TRIGGER POINT
 async def prompt_trigger_point(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
-    await context.bot.send_message(
-        chat_id=context.user_data["chat_id"],
-        text=await trigger_point_selection(language),
-        parse_mode="HTML",
-    )
-    context.user_data["is_entering_trigger_point"] = True
+    symbol = context.user_data["selected_symbol"]
+    if symbol != "Stake Watch":
+        await context.bot.send_message(
+            chat_id=context.user_data["chat_id"],
+            text=await trigger_point_selection(language),
+            parse_mode="HTML",
+        )
+        context.user_data["is_entering_trigger_point"] = True
+    else:
+        await prompt_tracked_wallet(update, context)
 
 async def handle_trigger_point(update, context):
     trigger_point = update.message.text
