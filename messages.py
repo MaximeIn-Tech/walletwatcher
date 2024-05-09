@@ -335,6 +335,7 @@ async def tracked_wallet_setup_message(
     contract_address,
     trigger_point,
     balance,
+    stake,
     language,
 ):
     if language == "fr":

@@ -769,6 +769,9 @@ async def prompt_tracked_wallet(update, context):
     trigger_point = context.user_data.get("trigger_point")
     if symbol != "Stake Watch":
         balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
+    else:
+        stake = fetch_theta_stake(wallet_address)
+        balance = None
 
 
     if symbol is None:
@@ -813,6 +816,7 @@ async def prompt_tracked_wallet(update, context):
                 "token_symbol": symbol,
                 "trigger_point": trigger_point,
                 "balance": balance,
+                "stake_data": stake,
             }
         )
         .execute()
@@ -831,6 +835,7 @@ async def prompt_tracked_wallet(update, context):
         contract_address,
         trigger_point,
         balance,
+        stake,
         language,
     )
 

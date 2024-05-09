@@ -301,10 +301,10 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
             return balance
 
 
-def main():
-    data = fetch_theta_stake("0xCB2A9C1336C6CB83BF5453791138ED350C343BC5")
-    print(data)
+# def main():
+#     data = fetch_theta_stake("0xCB2A9C1336C6CB83BF5453791138ED350C343BC5")
+#     print(data)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
