@@ -110,6 +110,7 @@ def fetch_theta_stake(wallet_address):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             data = response.json()
+            return data
 
         else:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
@@ -300,12 +301,10 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
             return balance
 
 
-# def main():
-#     decimal = fetch_decimal_for_contract(
-#         "ETH", "0x50327c6c5a14dcade707abad2e27eb517df87ab5"
-#     )
-#     print(decimal)
+def main():
+    data = fetch_theta_stake("0xCB2A9C1336C6CB83BF5453791138ED350C343BC5")
+    print(data)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
