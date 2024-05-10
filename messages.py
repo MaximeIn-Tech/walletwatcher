@@ -327,6 +327,19 @@ async def subscription_explanation(user_language):
         return f"You can have up to 10 alerts for now while on the free version. More subscriptions to come..."
 
 
+match_table = {
+    "eenp": "Edge Node",
+    "gcp": "Guardian Node",
+    "vcp": "Validator Node",
+}
+
+match_table_token = {
+    "eenp": "TFUEL",
+    "gcp": "THETA",
+    "vcp": "THETA.",
+}
+
+
 async def tracked_wallet_setup_message(
     wallet_name,
     blockchain,
@@ -343,7 +356,23 @@ async def tracked_wallet_setup_message(
         message += f"Nom du portefeuille : {wallet_name}\n"
         message += f"Blockchain : {blockchain}\n"
         message += f"Adresse du portefeuille : {wallet_address}\n"
-        if symbol is not None:
+        if symbol == "Stake Watch":
+            if stake["body"]["sourceRecords"]:
+                message += f"Stake watch:\n"
+                for record in stake["body"]["sourceRecords"]:
+                    record_type = record["type"]
+                    amount = int(record["amount"]) * (10**-18)
+                    # Format the amount with spaces every three digits
+                    formatted_amount = "{:,.2f}".format(amount).replace(
+                        ",", " "
+                    )  # Replace commas with spaces
+                    if record_type in match_table:
+                        message_to_add = match_table[record_type]
+                        token = match_table_token[record_type]
+                        message += f"{message_to_add} avec {formatted_amount} {token} stakés.\n"
+            else:
+                message += "Rien n'est staké depuis ce wallet.\n"
+        elif symbol is not None:
             symbol = symbol.capitalize()
             message += f"Symbole du jeton : {symbol}\n"
         if contract_address is not None:
@@ -357,7 +386,25 @@ async def tracked_wallet_setup_message(
         message += f"Nombre del monedero: {wallet_name}\n"
         message += f"Blockchain: {blockchain}\n"
         message += f"Dirección del monedero: {wallet_address}\n"
-        if symbol is not None:
+        if symbol == "Stake Watch":
+            if stake["body"]["sourceRecords"]:
+                message += f"Stake watch:\n"
+                for record in stake["body"]["sourceRecords"]:
+                    record_type = record["type"]
+                    amount = int(record["amount"]) * (10**-18)
+                    # Format the amount with spaces every three digits
+                    formatted_amount = "{:,.2f}".format(amount).replace(
+                        ",", " "
+                    )  # Replace commas with spaces
+                    if record_type in match_table:
+                        message_to_add = match_table[record_type]
+                        token = match_table_token[record_type]
+                        message += (
+                            f"{message_to_add} con {formatted_amount} {token} staked.\n"
+                        )
+            else:
+                message += "Rien n'est staké depuis ce wallet.\n"
+        elif symbol is not None:
             symbol = symbol.capitalize()
             message += f"Símbolo del token: {symbol}\n"
         if contract_address is not None:
@@ -371,7 +418,23 @@ async def tracked_wallet_setup_message(
         message += f"Wallet Name: {wallet_name}\n"
         message += f"Blockchain: {blockchain}\n"
         message += f"Wallet Address: {wallet_address}\n"
-        if symbol is not None:
+        if symbol == "Stake Watch":
+            if stake["body"]["sourceRecords"]:
+                message += f"Stake watch:\n"
+                for record in stake["body"]["sourceRecords"]:
+                    record_type = record["type"]
+                    amount = int(record["amount"]) * (10**-18)
+                    # Format the amount with spaces every three digits
+                    formatted_amount = "{:,.2f}".format(amount).replace(
+                        ",", " "
+                    )  # Replace commas with spaces
+                    if record_type in match_table:
+                        message_to_add = match_table[record_type]
+                        token = match_table_token[record_type]
+                        message += f"{message_to_add} with {formatted_amount} {token} staked.\n"
+            else:
+                message += "Nothing is staked from this wallet.\n"
+        elif symbol is not None:
             symbol = symbol.capitalize()
             message += f"Token Symbol: {symbol}\n"
         if contract_address is not None:
@@ -389,9 +452,27 @@ def generate_formatted_setups(setups, alert, user_language):
     for n, setup in enumerate(setups.data, start=1):
 
         if user_language == "fr":
-            formatted_setups += f"\n{alert} {n}:"
+            formatted_setups += f"{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
-            if setup["token_symbol"] is not None:
+            if setup["token_symbol"] == "Stake Watch":
+                stake = setup["stake_data"]
+                formatted_setups += f"\nStake Watch!\n"
+                if stake["body"]["sourceRecords"]:
+                    formatted_setups += f"Vos stakes sont:\n"
+                    for record in stake["body"]["sourceRecords"]:
+                        record_type = record["type"]
+                        amount = int(record["amount"]) * (10**-18)
+                        # Format the amount with spaces every three digits
+                        formatted_amount = "{:,.2f}".format(amount).replace(
+                            ",", " "
+                        )  # Replace commas with spaces
+                        if record_type in match_table:
+                            message_to_add = match_table[record_type]
+                            token = match_table_token[record_type]
+                            formatted_setups += f"{message_to_add} avec {formatted_amount} {token} stakés.\n"
+                else:
+                    formatted_setups += "Rien n'est staké pour le moment.\n"
+            elif setup["token_symbol"] is not None:
                 formatted_setups += f"\nToken: {setup['token_symbol']}"
             if setup["contract_address"] is not None:
                 formatted_setups += f"\nContract Address: {setup['contract_address']}"
@@ -407,7 +488,25 @@ def generate_formatted_setups(setups, alert, user_language):
         elif user_language == "es":
             formatted_setups += f"{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
-            if setup["token_symbol"] is not None:
+            if setup["token_symbol"] == "Stake Watch":
+                stake = setup["stake_data"]
+                formatted_setups += f"\nStake Watch!\n"
+                if stake["body"]["sourceRecords"]:
+                    formatted_setups += f"Vos stakes sont:\n"
+                    for record in stake["body"]["sourceRecords"]:
+                        record_type = record["type"]
+                        amount = int(record["amount"]) * (10**-18)
+                        # Format the amount with spaces every three digits
+                        formatted_amount = "{:,.2f}".format(amount).replace(
+                            ",", " "
+                        )  # Replace commas with spaces
+                        if record_type in match_table:
+                            message_to_add = match_table[record_type]
+                            token = match_table_token[record_type]
+                            formatted_setups += f"{message_to_add} con {formatted_amount} {token} staked.\n"
+                else:
+                    formatted_setups += "Rien n'est staké pour le moment.\n"
+            elif setup["token_symbol"] is not None:
                 formatted_setups += f"T\noken: {setup['token_symbol']}"
             if setup["contract_address"] is not None:
                 formatted_setups += (
@@ -425,7 +524,25 @@ def generate_formatted_setups(setups, alert, user_language):
             # Default to English if language not specified or recognized
             formatted_setups += f"{alert} {n}:"
             formatted_setups += f"\nBlockchain: {setup['blockchain']}"
-            if setup["token_symbol"] is not None:
+            if setup["token_symbol"] == "Stake Watch":
+                stake = setup["stake_data"]
+                formatted_setups += f"\nStake Watch!\n"
+                if stake["body"]["sourceRecords"]:
+                    formatted_setups += f"Your stakes are:\n"
+                    for record in stake["body"]["sourceRecords"]:
+                        record_type = record["type"]
+                        amount = int(record["amount"]) * (10**-18)
+                        # Format the amount with spaces every three digits
+                        formatted_amount = "{:,.2f}".format(amount).replace(
+                            ",", " "
+                        )  # Replace commas with spaces
+                        if record_type in match_table:
+                            message_to_add = match_table[record_type]
+                            token = match_table_token[record_type]
+                            formatted_setups += f"{message_to_add} with {formatted_amount} {token} staked.\n"
+                else:
+                    formatted_setups += "Nothing is staked from this wallet.\n"
+            elif setup["token_symbol"] is not None:
                 formatted_setups += f"\nToken: {setup['token_symbol']}"
             if setup["contract_address"] is not None:
                 formatted_setups += f"\nContract Address: {setup['contract_address']}"

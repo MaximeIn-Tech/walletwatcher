@@ -205,6 +205,7 @@ def main():
     for record in stake_data["sourceRecords"]:
         record_type = record["type"]
         amount = int(record["amount"]) * (10**-18)
+        staked_value = record["withdrawn"]
         # Format the amount with spaces every three digits
         formatted_amount = "{:,.2f}".format(amount).replace(
             ",", " "
@@ -213,9 +214,7 @@ def main():
             message = match_table[record_type]
             token = match_table_token[record_type]
             print(f"{message} with {formatted_amount} {token} staked.")
-
-    else:
-        print("Unknown record type.")
+            print(staked_value)
 
 
 if __name__ == "__main__":
