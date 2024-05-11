@@ -488,7 +488,7 @@ async def track_sub_menu_1(update, context):
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-    if  user_setups.count <=5:
+    if  user_setups.count < 5:
         if user_wallets.count > 0:
             # User has existing wallets, display them in a menu
             wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
@@ -790,11 +790,8 @@ async def prompt_tracked_wallet(update, context):
     symbol = context.user_data.get("selected_symbol")
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
-    print(symbol)
     if symbol != "Stake Watch":
-        print(wallet_address, contract_address)
         balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
-        print(balance)
         if balance != None:
             balance = round(balance, 2)
         stake = None
