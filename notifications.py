@@ -61,7 +61,7 @@ async def check_balance():
                                 text=f"📈 Wallet named {name} received:\n{delta}{setup["token_symbol"]}.\nYour balance is now {new_balance} {setup["token_symbol"]}.",
                                 disable_notification=True,
                             )
-                        elif delta < 0 and delta < setup["trigger_point"] :
+                        elif delta < 0 and delta < -setup["trigger_point"] :
                             # print("Delta < 0")
                             await bot.send_message(
                             chat_id=setup["chat_id"],
