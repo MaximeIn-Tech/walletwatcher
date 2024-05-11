@@ -456,7 +456,7 @@ async def track_sub_menu_1(update, context):
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-    if user_setups.count <= 10:
+    if user_setups.count <= 5:
         if user_wallets.count > 0:
             # User has existing wallets, display them in a menu
             wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
@@ -773,10 +773,11 @@ async def prompt_tracked_wallet(update, context):
     trigger_point = context.user_data.get("trigger_point")
     if symbol != "Stake Watch":
         balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
+        balance = round(balance, 2)
         stake = None
     else:
         stake = fetch_theta_stake(wallet_address)
-        print (f"Stake data in main : {stake} ")
+        stake = stake["body"]
         balance = None
 
 
@@ -912,6 +913,7 @@ if __name__ == "__main__":
     ############################ Main Menu Handlers ############################
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("menu", start))
     application.add_handler(CallbackQueryHandler(main_menu, pattern="main"))
     application.add_handler(CallbackQueryHandler(help, pattern="help_menu"))
     application.add_handler(CallbackQueryHandler(show_wallets, pattern="list_wallets"))

@@ -181,7 +181,7 @@ def fetch_stake_for_wallet(wallet_address):
             .eq("token_symbol", "Stake Watch")
             .execute()
         )
-        return stake_data.data[0]["stake_data"]["body"]
+        return stake_data.data[0]["stake_data"]
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors

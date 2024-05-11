@@ -209,7 +209,7 @@ async def wallets_found(user_language: str):
         return "Tus carteras seguidas son (haz clic en una para ver qué contrato está seguido) :"
     else:
         return (
-            "Your wallet followed are (click on one to see what contract is followed):"
+            "Your followed wallets are (click on one to see what contract is followed):"
         )
 
 
@@ -260,11 +260,11 @@ async def use_buttons(user_language):
 
 async def too_many_setups(user_language):
     if user_language == "fr":
-        return f"Vous avez atteint la limite de 10 alertes gratuites. Pour en ajouter plus, supprimez-en une existante ou abonnez-vous."
+        return f"Vous avez atteint la limite de 5 alertes gratuites. Pour en ajouter plus, supprimez-en une existante ou abonnez-vous."
     elif user_language == "es":
-        return f"Has alcanzado el límite de 10 alertas gratuitas. Para añadir más, elimina una existente o suscríbete."
+        return f"Has alcanzado el límite de 5 alertas gratuitas. Para añadir más, elimina una existente o suscríbete."
     else:
-        return f"You've reached the limit of 10 free alerts. To add more, delete an existing one or subscribe."
+        return f"You've reached the limit of 5 free alerts. To add more, delete an existing one or subscribe."
 
 
 ##### DELETE SECTION
@@ -357,9 +357,9 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain : {blockchain}\n"
         message += f"Adresse du portefeuille : {wallet_address}\n"
         if symbol == "Stake Watch":
-            if stake["body"]["sourceRecords"]:
+            if stake["sourceRecords"]:
                 message += f"Stake watch:\n"
-                for record in stake["body"]["sourceRecords"]:
+                for record in stake["sourceRecords"]:
                     record_type = record["type"]
                     amount = int(record["amount"]) * (10**-18)
                     # Format the amount with spaces every three digits
@@ -371,7 +371,7 @@ async def tracked_wallet_setup_message(
                         token = match_table_token[record_type]
                         message += f"{message_to_add} avec {formatted_amount} {token} stakés.\n"
             else:
-                message += "Rien n'est staké depuis ce wallet.\n"
+                message += "Rien n'est staké depuis ce portefeuille.\n"
         elif symbol is not None:
             symbol = symbol.capitalize()
             message += f"Symbole du jeton : {symbol}\n"
@@ -387,9 +387,9 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain: {blockchain}\n"
         message += f"Dirección del monedero: {wallet_address}\n"
         if symbol == "Stake Watch":
-            if stake["body"]["sourceRecords"]:
+            if stake["sourceRecords"]:
                 message += f"Stake watch:\n"
-                for record in stake["body"]["sourceRecords"]:
+                for record in stake["sourceRecords"]:
                     record_type = record["type"]
                     amount = int(record["amount"]) * (10**-18)
                     # Format the amount with spaces every three digits
@@ -399,11 +399,9 @@ async def tracked_wallet_setup_message(
                     if record_type in match_table:
                         message_to_add = match_table[record_type]
                         token = match_table_token[record_type]
-                        message += (
-                            f"{message_to_add} con {formatted_amount} {token} staked.\n"
-                        )
+                        message += f"{message_to_add} con {formatted_amount} {token} apostadas.\n"
             else:
-                message += "Rien n'est staké depuis ce wallet.\n"
+                message += "No se almacena nada en esta cartera.\n"
         elif symbol is not None:
             symbol = symbol.capitalize()
             message += f"Símbolo del token: {symbol}\n"
@@ -419,9 +417,9 @@ async def tracked_wallet_setup_message(
         message += f"Blockchain: {blockchain}\n"
         message += f"Wallet Address: {wallet_address}\n"
         if symbol == "Stake Watch":
-            if stake["body"]["sourceRecords"]:
+            if stake["sourceRecords"]:
                 message += f"Stake watch:\n"
-                for record in stake["body"]["sourceRecords"]:
+                for record in stake["sourceRecords"]:
                     record_type = record["type"]
                     amount = int(record["amount"]) * (10**-18)
                     # Format the amount with spaces every three digits
@@ -457,9 +455,9 @@ def generate_formatted_setups(setups, alert, user_language):
             if setup["token_symbol"] == "Stake Watch":
                 stake = setup["stake_data"]
                 formatted_setups += f"\nStake Watch!\n"
-                if stake["body"]["sourceRecords"]:
+                if stake["sourceRecords"]:
                     formatted_setups += f"Vos stakes sont:\n"
-                    for record in stake["body"]["sourceRecords"]:
+                    for record in stake["sourceRecords"]:
                         record_type = record["type"]
                         amount = int(record["amount"]) * (10**-18)
                         # Format the amount with spaces every three digits
@@ -491,9 +489,9 @@ def generate_formatted_setups(setups, alert, user_language):
             if setup["token_symbol"] == "Stake Watch":
                 stake = setup["stake_data"]
                 formatted_setups += f"\nStake Watch!\n"
-                if stake["body"]["sourceRecords"]:
+                if stake["sourceRecords"]:
                     formatted_setups += f"Vos stakes sont:\n"
-                    for record in stake["body"]["sourceRecords"]:
+                    for record in stake["sourceRecords"]:
                         record_type = record["type"]
                         amount = int(record["amount"]) * (10**-18)
                         # Format the amount with spaces every three digits
@@ -503,7 +501,7 @@ def generate_formatted_setups(setups, alert, user_language):
                         if record_type in match_table:
                             message_to_add = match_table[record_type]
                             token = match_table_token[record_type]
-                            formatted_setups += f"{message_to_add} con {formatted_amount} {token} staked.\n"
+                            formatted_setups += f"{message_to_add} con {formatted_amount} {token} apostadas.\n"
                 else:
                     formatted_setups += "Rien n'est staké pour le moment.\n"
             elif setup["token_symbol"] is not None:
@@ -527,9 +525,9 @@ def generate_formatted_setups(setups, alert, user_language):
             if setup["token_symbol"] == "Stake Watch":
                 stake = setup["stake_data"]
                 formatted_setups += f"\nStake Watch!\n"
-                if stake["body"]["sourceRecords"]:
+                if stake["sourceRecords"]:
                     formatted_setups += f"Your stakes are:\n"
-                    for record in stake["body"]["sourceRecords"]:
+                    for record in stake["sourceRecords"]:
                         record_type = record["type"]
                         amount = int(record["amount"]) * (10**-18)
                         # Format the amount with spaces every three digits

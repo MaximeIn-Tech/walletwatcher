@@ -8,7 +8,7 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
     english_options = [
         InlineKeyboardButton("🚀 Add an alert", callback_data="track_menu"),
         InlineKeyboardButton("❌ Delete an alert", callback_data="remove_wallet_menu"),
-        InlineKeyboardButton("📋 Wallets", callback_data="list_wallets"),
+        InlineKeyboardButton("📜 Wallets", callback_data="list_wallets"),
         InlineKeyboardButton("⚙️ Settings", callback_data="settings_menu"),
         InlineKeyboardButton("❓ Help", callback_data="help_menu"),
     ]
@@ -18,7 +18,7 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton(
             "❌ Supprimer une alerte", callback_data="remove_wallet_menu"
         ),
-        InlineKeyboardButton("📋 Portefeuilles", callback_data="list_wallets"),
+        InlineKeyboardButton("📜 Portefeuilles", callback_data="list_wallets"),
         InlineKeyboardButton("⚙️ Paramètres", callback_data="settings_menu"),
         InlineKeyboardButton("❓ Aide", callback_data="help_menu"),
     ]
@@ -28,7 +28,7 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
         InlineKeyboardButton(
             "❌ Eliminar una alerta", callback_data="remove_wallet_menu"
         ),
-        InlineKeyboardButton("📋 Carteras", callback_data="list_wallets"),
+        InlineKeyboardButton("📜 Carteras", callback_data="list_wallets"),
         InlineKeyboardButton("⚙️ Configuración", callback_data="settings_menu"),
         InlineKeyboardButton("❓ Ayuda", callback_data="help_menu"),
     ]
