@@ -27,31 +27,25 @@ Ready to be notified with every move? Add your wallets and stay in complete cont
 #### HELP MESSAGES ###
 async def help_menu(user_language: str):
     if user_language == "fr":
-        return """Le bot prend soin de vos demandes et stocke vos données en toute sécurité dans une base de données.
+        return """Bienvenue dans la section d'aide du bot.
 
-Une grande importance est accordée à la protection de votre anonymat. Seul votre Chat_ID est conservé, garantissant ainsi que les messages vous parviennent précisément sans mélanger les données des autres utilisateurs.
+Vous pourrez ici sélectionner une option pour en savoir plus sur le fonctionnement du bot.
 
-De plus, le bot n'enregistre pas votre adresse IP, votre nom d'utilisateur ou d'autres détails qui pourraient vous identifier.
-
-Créé par @TechSherpa.
+Créé avec soin par @TechSherpa.
 """
     elif user_language == "es":
-        return """El bot se encarga de tus solicitudes y almacena tus datos de forma segura en una base de datos.
+        return """Bienvenido/a a la sección de ayuda del bot.
 
-Se otorga gran importancia a la protección de tu anonimato. Solo se conserva tu Chat_ID, garantizando que los mensajes te lleguen con precisión sin mezclar datos de otros usuarios.
+Aquí podrás seleccionar una opción para saber más sobre cómo funciona el bot.
 
-Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles que puedan identificarte.
-
-Creado por @TechSherpa.
+Creado con cuidado por @TechSherpa.
 """
     else:
-        return """The bot takes care of your requests and securely stores your data in a database.
+        return """Welcome to the help section of the bot.
 
-Great importance is placed on protecting your anonymity. Only your Chat_ID is retained, ensuring that messages reach you accurately without mixing data from other users.
+Here you'll be able to select an option to know more about how the bot works.
 
-Furthermore, the bot does not record your IP address, username, or other details that could identify you.
-
-Created by @TechSherpa.
+Created with care by @TechSherpa.
 """
 
 
@@ -76,6 +70,84 @@ Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles
 Great importance is placed on protecting your anonymity. Only your Chat_ID is retained, ensuring that messages reach you accurately without mixing data from other users.
 
 Furthermore, the bot does not record your IP address, username, or other details that could identify you.
+"""
+
+
+async def donation_message(user_language: str):
+    if user_language == "fr":
+        return """🎉 Si vous souhaitez soutenir mon travail et contribuer aux coûts du bot, vous pouvez faire un don aux adresses ci-dessous :
+
+Pour les jetons TNT-20 :
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+Pour les jetons ERC-20 :
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+Pour les jetons BEP-20 :
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+
+Pour tout autre don, veuillez m'envoyer un message direct @TechSherpa.
+
+Merci beaucoup ! 🙏
+TechSherpa 🦙
+"""
+    elif user_language == "es":
+        return """🎉 Si deseas apoyar mi trabajo y ayudar a cubrir los costos del bot, puedes donar a las siguientes direcciones:
+
+Para los tokens TNT-20:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+Para los tokens ERC-20:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+Para los tokens BEP-20:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+
+Para cualquier otra donación, por favor envíame un mensaje directo a @TechSherpa.
+
+¡Muchas gracias! 🙏
+TechSherpa 🦙
+"""
+    else:
+        return """🎉 If you want to support my work and support the cost of the bot, you can donate on these addresses below:
+
+For TNT-20 tokens:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+For ERC-20 tokens:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+For BEP-20 tokens:
+    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+
+For any other donations, please send me a direct message @TechSherpa.
+
+Thanks a lot! 🙏
+TechSherpa 🦙
+"""
+
+
+async def data_collection_message(user_language: str):
+    if user_language == "fr":
+        return """🌐 Les données sont collectées sur différents sites web via des API.
+
+Le bot utilise :
+- Thetascan.io pour la blockchain Theta.
+- Explorer.thetatoken.org pour les Stakes Theta.
+- Etherscan.io pour la blockchain Ethereum.
+- Bscscan.io pour la blockchain BSC.
+"""
+    elif user_language == "es":
+        return """🌐 Los datos se recopilan en diferentes sitios web a través de APIs.
+
+El bot utiliza:
+- Thetascan.io para la blockchain de Theta.
+- Explorer.thetatoken.org para las participaciones en Theta.
+- Etherscan.io para la blockchain de Ethereum.
+- Bscscan.io para la blockchain de BSC.
+"""
+    else:
+        return """🌐 Data is collected on different websites throught APIs.
+
+The bot uses:
+- Thetascan.io for Theta Blockchain.
+- Explorer.thetatoken.org for Theta Stakes.
+- Etherscan.io for Ethereum Blockchain.
+- Bscscan.io for BSC Blockchain.
 """
 
 
@@ -345,11 +417,11 @@ async def setup_to_delete_2(user_language):
 
 async def subscription_explanation(user_language):
     if user_language == "fr":
-        return f"Pour le moment, vous pouvez avoir jusqu'à 10 alertes dans la version gratuite. D'autres abonnements seront disponibles bientôt..."
+        return f"Pour le moment, vous pouvez avoir jusqu'à 5 alertes dans la version gratuite.\n\nD'autres abonnements seront disponibles bientôt..."
     elif user_language == "es":
-        return f"Por ahora, puedes tener hasta 10 alertas en la versión gratuita. ¡Más suscripciones próximamente..."
+        return f"Por ahora, puedes tener hasta 5 alertas en la versión gratuita. \n\n¡Más suscripciones próximamente..."
     else:
-        return f"You can have up to 10 alerts for now while on the free version. More subscriptions to come..."
+        return f"You can have up to 5 alerts for now while on the free version.\n\nMore subscriptions to come..."
 
 
 match_table = {

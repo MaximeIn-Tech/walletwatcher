@@ -43,6 +43,7 @@ async def check_balance():
                 if new_balance is not None and balance_in_db is not None:
                     new_balance = round(new_balance, 2)
                     delta = new_balance - balance_in_db
+                    delta = round(delta, 2)
                     wallet_name = await fetch_wallet_address(setup["wallet_address"])
                     wallet_name = wallet_name.data
                     name = wallet_name[0]["wallet_name"]

@@ -164,7 +164,34 @@ async def help(update, context):
     await query.answer()
     await query.edit_message_text(
         text=await help_menu(language),
-        reply_markup=await back_to_to_main_keyboard(language),
+        reply_markup=await help_menu_keyboard(language),
+    )
+
+async def handle_privacy(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        text=await privacy_message(language),
+        reply_markup=await back_to_help_menu(language),
+    )
+    
+async def handle_donation(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        text=await donation_message(language),
+        reply_markup=await back_to_help_menu(language),
+    )
+
+async def handle_data_collection(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        text=await data_collection_message(language),
+        reply_markup=await back_to_help_menu(language),
     )
 
 ############################ Wallets Section #########################################
@@ -420,6 +447,11 @@ async def handle_deletion_delete_all(update, context):
         # User canceled deletion, you can handle this according to your needs
         await query.answer("Deletion canceled.")
         await query.message.delete()
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,
+            text=await main_menu_message(context.user_data["name"], language),
+            reply_markup=await main_menu_keyboard(language)
+        )
     else:
         # Handle unexpected user response
         await query.answer("Invalid response. Please use the provided buttons.")
@@ -961,6 +993,16 @@ if __name__ == "__main__":
     application.add_handler(
         CallbackQueryHandler(language_selection, pattern=r"^(en|es|fr)$")
     )
+    application.add_handler(
+        CallbackQueryHandler(handle_privacy, pattern="privacy")
+    )
+    application.add_handler(
+        CallbackQueryHandler(handle_donation, pattern="donation")
+    )
+    application.add_handler(
+        CallbackQueryHandler(handle_data_collection, pattern="data_collection")
+    )
+
 
     ############################ Naming Wallet Handlers #########################################
     application.add_handler(

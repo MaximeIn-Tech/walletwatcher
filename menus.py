@@ -51,6 +51,92 @@ async def main_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
+async def help_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        InlineKeyboardButton("🔓 Privacy", callback_data="privacy"),
+        InlineKeyboardButton("📊 Data Collection", callback_data="data_collection"),
+        InlineKeyboardButton("🌱 Donation", callback_data="donation"),
+    ]
+
+    french_options = [
+        InlineKeyboardButton("🔓 Confidentialité", callback_data="privacy"),
+        InlineKeyboardButton("📊 Collecte de données", callback_data="data_collection"),
+        InlineKeyboardButton("🌱 Donation", callback_data="donation"),
+    ]
+
+    spanish_options = [
+        InlineKeyboardButton("🔓 Privacidad", callback_data="privacy"),
+        InlineKeyboardButton(
+            "📊 Recolección de datos", callback_data="data_collection"
+        ),
+        InlineKeyboardButton("🌱 Donación", callback_data="donation"),
+    ]
+
+    main_menu_button_texts = {
+        "en": "🏠 Main menu",
+        "fr": "🏠 Menu principal",
+        "es": "🏠 Menú principal",
+    }
+
+    main_menu_button = InlineKeyboardButton(
+        main_menu_button_texts.get(user_language, "🏠 Main menu"), callback_data="main"
+    )
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    # Maximum options per row
+    max_options_per_row = 2
+
+    # Divide options into rows
+    keyboard = []
+    for i in range(0, len(buttons), max_options_per_row):
+        keyboard.append(buttons[i : i + max_options_per_row])
+
+    # Add the "back" button and the "main menu" button as the last row
+    keyboard.append([main_menu_button])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def back_to_help_menu(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="help_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Main menu", callback_data="main")],
+    ]
+
+    french_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="help_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Menu principal", callback_data="main")],
+    ]
+
+    spanish_options = [
+        [
+            InlineKeyboardButton("🔙", callback_data="help_menu"),
+        ],
+        [InlineKeyboardButton("🏠 Menú principal", callback_data="main")],
+    ]
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 async def back_to_to_main_keyboard(user_language: str) -> InlineKeyboardMarkup:
 
     english_options = [
