@@ -187,36 +187,42 @@ def fetch_stake_for_wallet(wallet_address):
         return None  # Return None in case of any errors
 
 
-def main():
-    stake_data = fetch_stake_for_wallet("0xcb2a9c1336c6cb83bf5453791138ed350c343bc5")
+# def main():
+#     stake_data = fetch_stake_for_wallet("0xcb2a9c1336c6cb83bf5453791138ed350c343bc5")
 
-    match_table = {
-        "eenp": "This is an Edge Node.",
-        "gcp": "This is a Guardian Node.",
-        "vcp": "This is a Validator Node.",
-    }
+#     match_table = {
+#         "eenp": "This is an Edge Node.",
+#         "gcp": "This is a Guardian Node.",
+#         "vcp": "This is a Validator Node.",
+#     }
 
-    match_table_token = {
-        "eenp": "TFUEL",
-        "gcp": "THETA",
-        "vcp": "THETA.",
-    }
+#     match_table_token = {
+#         "eenp": "TFUEL",
+#         "gcp": "THETA",
+#         "vcp": "THETA.",
+#     }
 
-    for record in stake_data["sourceRecords"]:
-        record_type = record["type"]
-        amount = int(record["amount"]) * (10**-18)
-        staked_value = record["withdrawn"]
-        # Format the amount with spaces every three digits
-        formatted_amount = "{:,.2f}".format(amount).replace(
-            ",", " "
-        )  # Replace commas with spaces
-        if record_type in match_table:
-            message = match_table[record_type]
-            token = match_table_token[record_type]
-            print(f"{message} with {formatted_amount} {token} staked.")
-            print(staked_value)
+#     for record in stake_data["sourceRecords"]:
+#         record_type = record["type"]
+#         amount = int(record["amount"]) * (10**-18)
+#         staked_value = record["withdrawn"]
+#         # Format the amount with spaces every three digits
+#         formatted_amount = "{:,.2f}".format(amount).replace(
+#             ",", " "
+#         )  # Replace commas with spaces
+#         if record_type in match_table:
+#             message = match_table[record_type]
+#             token = match_table_token[record_type]
+#             print(f"{message} with {formatted_amount} {token} staked.")
+#             print(staked_value)
 
 
-if __name__ == "__main__":
+# def main():
+#     token = fetch_token_symbol_for_contract(
+#         "THETA", "0x6f20254c45f55a7aecdb54d5cd97a94e868eb135"
+#     )
+#     print(token)
 
-    main()
+
+# if __name__ == "__main__":
+#     main()

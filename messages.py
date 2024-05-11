@@ -27,25 +27,46 @@ Ready to be notified with every move? Add your wallets and stay in complete cont
 #### HELP MESSAGES ###
 async def help_menu(user_language: str):
     if user_language == "fr":
-        return """Bienvenue dans la section d'aide du bot.
+        return """Bienvenue dans la section d'aide du bot. 🤖
 
-Vous pourrez ici sélectionner une option pour en savoir plus sur le fonctionnement du bot.
+Pour faire fonctionner le bot, il vous suffit d'entrer une nouvelle alerte, de la configurer et c'est tout. 😊
 
-Créé avec soin par @TechSherpa.
+Le seuil de déclenchement est le montant de tokens que vous souhaitez pour activer votre alerte.
+Il fonctionne aussi bien pour les changements positifs que négatifs.
+Par exemple, si votre point de déclenchement est 100 et que le portefeuille reçoit 90 tokens, aucune alerte ne sera envoyée.
+Cependant, si le portefeuille retire 110 tokens, une alerte sera envoyée.
+
+Vous pouvez consulter plus d'informations sur différents sujets en cliquant sur les boutons ci-dessous.
+
+Créé avec soin par @TechSherpa. 👨‍💻
 """
     elif user_language == "es":
-        return """Bienvenido/a a la sección de ayuda del bot.
+        return """Bienvenido/a a la sección de ayuda del bot. 🤖
 
-Aquí podrás seleccionar una opción para saber más sobre cómo funciona el bot.
+Para hacer funcionar el bot, solo tienes que ingresar una nueva alerta, configurarla y listo. 😊
 
-Creado con cuidado por @TechSherpa.
+El punto de activación es la cantidad de tokens que deseas para activar tu alerta.
+Funciona tanto para cambios positivos como negativos.
+Por ejemplo, si tu punto de activación es 100 y la billetera recibe 90 tokens, no se enviará una alerta.
+Sin embargo, si la billetera retira 110 tokens, se enviará una alerta.
+
+Puedes ver más información sobre diferentes temas haciendo clic en los botones a continuación.
+
+Creado con cuidado por @TechSherpa. 👨‍💻
 """
     else:
-        return """Welcome to the help section of the bot.
+        return """Welcome to the help section of the bot. 🤖
 
-Here you'll be able to select an option to know more about how the bot works.
+To make the bot work, you just have to enter a new alert, set it up and that's it. 😊
 
-Created with care by @TechSherpa.
+The trigger point is the amount of tokens you want to trigger your alert.
+It works for both positive and negative change.
+For example, if your trigger point is 100 and the wallet receives 90 tokens, an alert won't be sent.
+However, if the wallet withdraws 110 tokens, an alert will be sent.
+
+You can view more information about different topics by clicking on the buttons below.
+
+Created with care by @TechSherpa. 👨‍💻
 """
 
 
@@ -478,7 +499,7 @@ async def tracked_wallet_setup_message(
             else:
                 message += "Rien n'est staké depuis ce portefeuille.\n"
         elif symbol is not None:
-            symbol = symbol.capitalize()
+            symbol = symbol.upper()
             message += f"Symbole du jeton : {symbol}\n"
         if contract_address is not None:
             message += f"Adresse du contrat : {contract_address}\n"
@@ -508,7 +529,7 @@ async def tracked_wallet_setup_message(
             else:
                 message += "No se almacena nada en esta cartera.\n"
         elif symbol is not None:
-            symbol = symbol.capitalize()
+            symbol = symbol.upper()
             message += f"Símbolo del token: {symbol}\n"
         if contract_address is not None:
             message += f"Dirección del contrato: {contract_address}\n"
@@ -538,7 +559,7 @@ async def tracked_wallet_setup_message(
             else:
                 message += "Nothing is staked from this wallet.\n"
         elif symbol is not None:
-            symbol = symbol.capitalize()
+            symbol = symbol.upper()
             message += f"Token Symbol: {symbol}\n"
         if contract_address is not None:
             message += f"Contract Address: {contract_address}\n"

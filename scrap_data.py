@@ -138,8 +138,7 @@ def scrape_tokens():
         token_name_divs = soup.find_all(
             "div",
             style=[
-                "width: 100px; float:left; padding: 9px 5px; white-space: nowrap;overflow: hidden;",
-                "width: 120px; float:left; padding: 9px 5px; white-space: nowrap;overflow: hidden;",
+                "width: 100px; float:left; padding: 9px 5px; white-space: nowrap;overflow: hidden;"
             ],
         )
         for div in token_name_divs:
@@ -150,18 +149,20 @@ def scrape_tokens():
         # Find all div elements with the specified style for token addresses
         token_address_divs = soup.find_all(
             "div",
-            style=[
-                "width: 380px; float:left; padding: 9px 5px;",
-                "width: 425px; float:left; padding: 9px 5px;",
-            ],
+            style=["width: 380px; float:left; padding: 9px 5px;"],
         )
         for index, div in enumerate(token_address_divs):
             token_address = div.text.strip()
             token_name = token_name_divs[index].text.strip()
             if token_name in token_data:
                 token_data[token_name] = token_address
+
     else:
         print(f"Failed to retrieve data. Status code: {response.status_code}")
+
+        # Write data to JSON file
+    with open("theta_contracts.json", "w") as json_file:
+        json.dump(token_data, json_file)
 
     return token_data
 
@@ -271,11 +272,7 @@ def organize_json(json_file_path):
 
 
 def main():
-    # scrape_bsc_contracts()
-    # # To organise a json
-    # organized_data, length = organize_json("eth_contracts.json")
-    # # print(f"Organized JSON file created with {length} entries.")
-    scrape_bsc()
+    scrape_tokens()
 
 
 if __name__ == "__main__":

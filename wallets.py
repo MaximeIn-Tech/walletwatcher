@@ -43,9 +43,8 @@ def fetch_theta_single_wallet_balance(wallet_address, contract_address):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             data = response.json()
-            balance = data["balance"]
-            return balance
-
+            balance = data
+            return balance["balance"]
         else:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
             return None
@@ -280,7 +279,12 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
             balance = fetch_tfuel_balance(wallet_address)
             return balance
         else:
-            fetch_theta_single_wallet_balance(wallet_address, contract_address)
+            print("Fetching wallet for Theta other")
+            balance = fetch_theta_single_wallet_balance(
+                wallet_address, contract_address
+            )
+            balance = int(balance)
+            return balance
     elif blockchain == "ETH":
         if token_symbol == "ETH":
             balance = fetch_eth_token_balance(wallet_address)
@@ -302,7 +306,10 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
 
 
 # def main():
-#     data = fetch_theta_stake("0xCB2A9C1336C6CB83BF5453791138ED350C343BC5")
+#     data = fetch_theta_single_wallet_balance(
+#         "0xCB2A9C1336C6CB83BF5453791138ED350C343BC5",
+#         "0x9aa68d9652699654da9589633023deeb8a56f2b5",
+#     )
 #     print(data)
 
 

@@ -488,7 +488,7 @@ async def track_sub_menu_1(update, context):
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-    if user_setups.count <= 5:
+    if  user_setups.count <=5:
         if user_wallets.count > 0:
             # User has existing wallets, display them in a menu
             wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
@@ -691,6 +691,7 @@ async def handle_selected_token(update, context):
             context.user_data["contract_address"] = contract_address
             context.user_data["blockchain"] = selected_blockchain
 
+            selected_blockchain = selected_blockchain.upper()
             # Check if the selected blockchain is Theta and the selected token is "Stake Watch"
             if (
                 selected_blockchain == "THETA"
@@ -701,21 +702,7 @@ async def handle_selected_token(update, context):
                     text=await stake_message(language),
                     reply_markup=await back_to_to_main_keyboard(language),
                 )
-                data = (
-                supabase.table("Setups")
-                .insert(
-                    {
-                        "chat_id": context.user_data["chat_id"],
-                        "wallet_address": context.user_data["wallet_address"],
-                        "blockchain": selected_blockchain,
-                        "contract_address": contract_address,
-                        "token_symbol": selected_symbol,
-                        "trigger_point": None,
-                        "balance": None,
-                    }
-                )
-                .execute()
-            )
+                await prompt_tracked_wallet(update, context)
             else:
                 # Proceed with trigger point prompt
                 await prompt_trigger_point(update, context)
@@ -745,7 +732,7 @@ async def handle_contract_address(update, context):
 # STEP 6: TRIGGER POINT
 async def prompt_trigger_point(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
-    symbol = context.user_data["selected_symbol"]
+    symbol = None
     if symbol != "Stake Watch":
         await context.bot.send_message(
             chat_id=context.user_data["chat_id"],
@@ -803,15 +790,19 @@ async def prompt_tracked_wallet(update, context):
     symbol = context.user_data.get("selected_symbol")
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
+    print(symbol)
     if symbol != "Stake Watch":
+        print(wallet_address, contract_address)
         balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
-        balance = round(balance, 2)
+        print(balance)
+        if balance != None:
+            balance = round(balance, 2)
         stake = None
     else:
         stake = fetch_theta_stake(wallet_address)
         stake = stake["body"]
+        print(stake)
         balance = None
-
 
     if symbol is None:
         symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
