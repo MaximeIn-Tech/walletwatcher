@@ -127,27 +127,35 @@ async def data_collection_message(user_language: str):
 
 Le bot utilise :
 - Thetascan.io pour la blockchain Theta.
-- Explorer.thetatoken.org pour les Stakes Theta.
+- Explorer.thetatoken.org pour les Stakes Theta (vérifiées toutes les heures).
 - Etherscan.io pour la blockchain Ethereum.
 - Bscscan.io pour la blockchain BSC.
+
+Les soldes sont vérifiés toutes les 10 minutes.
+Pour les stakes Theta, les mises sont vérifiées toutes les heures.
 """
     elif user_language == "es":
         return """🌐 Los datos se recopilan en diferentes sitios web a través de APIs.
 
 El bot utiliza:
 - Thetascan.io para la blockchain de Theta.
-- Explorer.thetatoken.org para las participaciones en Theta.
+- Explorer.thetatoken.org para las apuestas en Theta (verificadas cada hora).
 - Etherscan.io para la blockchain de Ethereum.
 - Bscscan.io para la blockchain de BSC.
+
+Los saldos se verifican cada 10 minutos.
+Para los apostadores Theta, las apuestas se verifican cada hora.
 """
     else:
         return """🌐 Data is collected on different websites throught APIs.
 
 The bot uses:
 - Thetascan.io for Theta Blockchain.
-- Explorer.thetatoken.org for Theta Stakes.
+- Explorer.thetatoken.org for Theta Stakes (checked every hour).
 - Etherscan.io for Ethereum Blockchain.
 - Bscscan.io for BSC Blockchain.
+
+Balances are checked every 10 minutes.
 """
 
 
