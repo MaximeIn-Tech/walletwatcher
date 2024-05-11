@@ -24,7 +24,8 @@ Ready to be notified with every move? Add your wallets and stay in complete cont
 """
 
 
-async def help_message(user_language: str):
+#### HELP MESSAGES ###
+async def help_menu(user_language: str):
     if user_language == "fr":
         return """Le bot prend soin de vos demandes et stocke vos données en toute sécurité dans une base de données.
 
@@ -51,6 +52,30 @@ Great importance is placed on protecting your anonymity. Only your Chat_ID is re
 Furthermore, the bot does not record your IP address, username, or other details that could identify you.
 
 Created by @TechSherpa.
+"""
+
+
+async def privacy_message(user_language: str):
+    if user_language == "fr":
+        return """Le bot prend soin de vos demandes et stocke vos données en toute sécurité dans une base de données.
+
+Une grande importance est accordée à la protection de votre anonymat. Seul votre Chat_ID est conservé, garantissant ainsi que les messages vous parviennent précisément sans mélanger les données des autres utilisateurs.
+
+De plus, le bot n'enregistre pas votre adresse IP, votre nom d'utilisateur ou d'autres détails qui pourraient vous identifier.
+"""
+    elif user_language == "es":
+        return """El bot se encarga de tus solicitudes y almacena tus datos de forma segura en una base de datos.
+
+Se otorga gran importancia a la protección de tu anonimato. Solo se conserva tu Chat_ID, garantizando que los mensajes te lleguen con precisión sin mezclar datos de otros usuarios.
+
+Además, el bot no registra tu dirección IP, nombre de usuario u otros detalles que puedan identificarte.
+"""
+    else:
+        return """The bot takes care of your requests and securely stores your data in a database.
+
+Great importance is placed on protecting your anonymity. Only your Chat_ID is retained, ensuring that messages reach you accurately without mixing data from other users.
+
+Furthermore, the bot does not record your IP address, username, or other details that could identify you.
 """
 
 

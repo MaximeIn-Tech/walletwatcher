@@ -59,13 +59,16 @@ async def check_balance():
                             await bot.send_message(
                                 chat_id=setup["chat_id"],
                                 text=f"📈 Wallet named {name} received:\n{delta}{setup["token_symbol"]}.\nYour balance is now {new_balance} {setup["token_symbol"]}.",
+                                disable_notification=True,
                             )
                         elif delta < 0 and delta < setup["trigger_point"] :
                             # print("Delta < 0")
                             await bot.send_message(
-                                chat_id=setup["chat_id"],
-                                text=f"📉 Wallet named {name} withdrew:\n{delta}{setup["token_symbol"]}.\nYour balance is now {new_balance} {setup["token_symbol"]}.",
-                            )
+                            chat_id=setup["chat_id"],
+                            text=f"📉 Wallet named {name} withdrew:\n{delta}{setup['token_symbol']}.\nYour balance is now {new_balance} {setup['token_symbol']}.",
+                            disable_notification=True,
+                        )
+
                 else:
                     pass
     except Exception as e:
@@ -102,18 +105,19 @@ async def check_stake_watch():
                         withdrawn_values_from_db.append(item["withdrawn"])
                     # print (withdrawn_values_from_db)
                     current_stakes = fetch_stake_for_wallet(setup["wallet_address"])
-                    # print(current_stakes)
+                    data = supabase.table("Setups").update({"stake_data": current_stakes}).eq("id", id).execute()
                     current_stakes_values = current_stakes["sourceRecords"]
                     for item in current_stakes_values:
                         withdrawn_values_from_api.append(item["withdrawn"])
-                    # print(withdrawn_values_from_api)
-                    # withdrawn_values_from_db = [False,True,True]
-                    if withdrawn_values_from_api != withdrawn_values_from_db:
-                        await bot.send_message(
-                        chat_id=setup["chat_id"],
-                        text=f"🔥 ALERT: A stake from your *{name}* wallet is being withdrawn! 🔥\nIf this action isn't yours, act NOW and secure your wallet! 🔒",
-                        parse_mode="Markdown",)
-                        data = supabase.table("Setups").update({"stake_data": current_stakes}).eq("id", id).execute()
+                    if any(withdrawn_values_from_api):
+                        if withdrawn_values_from_api != withdrawn_values_from_db:
+                            await bot.send_message(
+                            chat_id=setup["chat_id"],
+                            text=f"🔥 ALERT: A stake from your *{name}* wallet is being withdrawn! 🔥\nIf this action isn't yours, act NOW and secure your wallet! 🔒",
+                            parse_mode="Markdown",
+                            disable_notification=True,)
+                        else:
+                            continue
                     else:
                         continue
                 else:

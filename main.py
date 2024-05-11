@@ -163,7 +163,7 @@ async def help(update, context):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await help_message(language),
+        text=await help_menu(language),
         reply_markup=await back_to_to_main_keyboard(language),
     )
 
