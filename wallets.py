@@ -24,6 +24,10 @@ def fetch_data_contract(contract_address):
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             data = response.json()
+            symbol = data["symbol"]
+            decimal = data["decimal"]
+
+            return symbol, decimal
 
         else:
             print(f"Failed to retrieve data. Status code: {response.status_code}")
@@ -283,7 +287,7 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
             balance = fetch_theta_single_wallet_balance(
                 wallet_address, contract_address
             )
-            balance = int(balance)
+            balance = float(balance)
             return balance
     elif blockchain == "ETH":
         if token_symbol == "ETH":

@@ -30,7 +30,7 @@ logging.basicConfig(
     level=logging.INFO,
     filename="logs.log",
     encoding="utf-8",
-    filemode="w",
+    filemode="a",
 )
 # set higher logging level for httpx to avoid all GET and POST requests being logged
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -488,7 +488,7 @@ async def track_sub_menu_1(update, context):
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-    if  user_setups.count < 5:
+    if  user_setups.count <= 5:
         if user_wallets.count > 0:
             # User has existing wallets, display them in a menu
             wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
@@ -718,7 +718,7 @@ async def handle_contract_address(update, context):
         # Store the contract address in the user data
         context.user_data["contract_address"] = contract_address
         await context.bot.send_message(
-            chat_id=context.user_data["chat_id"],
+            chat_id=update.effective_chat.id,
             text=await custom_contract_address(language, contract_address),
         )
         await prompt_trigger_point(update, context)
@@ -802,7 +802,27 @@ async def prompt_tracked_wallet(update, context):
         balance = None
 
     if symbol is None:
-        symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
+        #TODO: Check si le contract_address est dans la db, sinon fetch depuis l'API et ajouter à la DB!
+        existing_symbol = (
+        supabase.table("Contracts").select("*").eq("contract_address", contract_address).execute())
+        if not existing_symbol.data:
+            symbol, decimal = fetch_data_contract(contract_address)
+            print("Fetching data for new contract...")
+            print(symbol, decimal)
+            # data = (
+            #             supabase.table("Contracts")
+            #             .insert(
+            #                 {
+            #                     "blockchain": "THETA",
+            #                     "contract_address": contract_address,
+            #                     "token_symbol": symbol,
+            #                     "decimal": decimal,
+            #                 }
+            #             )
+            #             .execute()
+            # )
+        else:
+            symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
 
     # Check if the wallet exists
     existing_wallets = (
