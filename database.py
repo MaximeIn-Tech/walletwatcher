@@ -187,6 +187,16 @@ def fetch_stake_for_wallet(wallet_address):
         return None  # Return None in case of any errors
 
 
+def fetch_user_data(chat_id):
+    supabase = connect_to_database()
+    try:
+        data = supabase.table("Users").select("*").eq("chat_id", chat_id).execute()
+        return data.data
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
+
+
 # def main():
 #     stake_data = fetch_stake_for_wallet("0xcb2a9c1336c6cb83bf5453791138ed350c343bc5")
 
@@ -218,10 +228,8 @@ def fetch_stake_for_wallet(wallet_address):
 
 
 # def main():
-#     token = fetch_token_symbol_for_contract(
-#         "THETA", "0x6f20254c45f55a7aecdb54d5cd97a94e868eb135"
-#     )
-#     print(token)
+#     data = fetch_user_data(1355080202)
+#     print(data[0]["subscription"])
 
 
 # if __name__ == "__main__":

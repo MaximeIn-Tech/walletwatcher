@@ -283,7 +283,6 @@ def fetch_wallet_balance(blockchain, token_symbol, wallet_address, contract_addr
             balance = fetch_tfuel_balance(wallet_address)
             return balance
         else:
-            print("Fetching wallet for Theta other")
             balance = fetch_theta_single_wallet_balance(
                 wallet_address, contract_address
             )

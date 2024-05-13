@@ -476,7 +476,10 @@ async def add_wallet(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
-
+subscription_allowed_alerts = {
+        "Free": 5,  
+        "Premium": 20,  
+    }
 
 async def track_sub_menu_1(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -488,7 +491,12 @@ async def track_sub_menu_1(update, context):
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
-    if  user_setups.count <= 5:
+    user = fetch_user_data(update.effective_chat.id)
+    user_subscription = user[0]["subscription"]
+
+    allowed_subscriptions =  subscription_allowed_alerts.get(user_subscription, 5)
+
+    if  user_setups.count < allowed_subscriptions:
         if user_wallets.count > 0:
             # User has existing wallets, display them in a menu
             wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 

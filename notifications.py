@@ -21,6 +21,13 @@ async def check_balance():
     # Connect to the database
     supabase = connect_to_database()
     # Recover all the setups except stake watch
+
+    blockchain_sleep_times = {
+        "ETH": 0.1,  
+        "BSC": 0.1,
+        "THETA": 0.5,  
+    }
+
     try:
         fetched_setups = (
             supabase.table("Setups")
@@ -72,6 +79,8 @@ async def check_balance():
 
                 else:
                     pass
+                blockchain_sleep_time = blockchain_sleep_times.get(setup["blockchain"], 0.5)
+                await asyncio.sleep(blockchain_sleep_time)
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
@@ -124,6 +133,7 @@ async def check_stake_watch():
                 else:
                     print("No records.")
                     continue
+                await asyncio.sleep(1)
     except Exception as e:
         print("An error occurred:", e)
         return None  # Return None in case of any errors
@@ -138,6 +148,8 @@ if __name__ == "__main__":
             now = datetime.now()
             print(f"{now} Running check_balance...")
             await check_balance()
+            now = datetime.now()
+            print(f"{now} Completed check_balance.")
             await asyncio.sleep(check_balance_interval)
 
     async def check_stake_watch_loop():
@@ -145,6 +157,8 @@ if __name__ == "__main__":
             now = datetime.now()
             print(f"{now} Running check_stake_watch...")
             await check_stake_watch()
+            now = datetime.now()
+            print(f"{now} Completed check_stake_watch.")
             await asyncio.sleep(check_stake_watch_interval)
 
     # Start the event loop for each function
