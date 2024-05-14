@@ -386,11 +386,11 @@ async def use_buttons(user_language):
 
 async def too_many_setups(user_language):
     if user_language == "fr":
-        return f"Vous avez atteint la limite de 5 alertes gratuites. Pour en ajouter plus, supprimez-en une existante ou abonnez-vous."
+        return f"Vous avez atteint la limite de 5 alertes gratuites.\nPour en ajouter plus, supprimez-en une existante ou abonnez-vous.(fonctionnalité en cours de développement...)"
     elif user_language == "es":
-        return f"Has alcanzado el límite de 5 alertas gratuitas. Para añadir más, elimina una existente o suscríbete."
+        return f"Has alcanzado el límite de 5 alertas gratuitas.\nPara añadir más, elimina una existente o suscríbete.(característica en desarrollo...)"
     else:
-        return f"You've reached the limit of 5 free alerts. To add more, delete an existing one or subscribe."
+        return f"You've reached the limit of 5 free alerts.\nTo add more, delete an existing one or subscribe.(feature in development...)"
 
 
 ##### DELETE SECTION

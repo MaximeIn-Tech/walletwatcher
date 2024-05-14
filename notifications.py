@@ -1,8 +1,9 @@
 import asyncio
-import time
+import logging
 from datetime import datetime
 
 from dotenv import load_dotenv
+from httpcore import ConnectError
 from telegram import Bot
 
 from database import *
@@ -10,6 +11,18 @@ from wallets import *
 
 load_dotenv()
 
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+    filename="logs.log",
+    encoding="utf-8",
+    filemode="a",
+)
+# set higher logging level for httpx to avoid all GET and POST requests being logged
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 token = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -69,6 +82,7 @@ async def check_balance():
                                 text=f"📈 Wallet named {name} received:\n{delta}{setup["token_symbol"]}.\nYour balance is now {new_balance} {setup["token_symbol"]}.",
                                 disable_notification=True,
                             )
+                            # logger.info(f"Message sent for received tokens to {setup["chat_id"]}")
                         elif delta < 0 and delta < -setup["trigger_point"] :
                             # print("Delta < 0")
                             await bot.send_message(
@@ -76,6 +90,7 @@ async def check_balance():
                             text=f"📉 Wallet named {name} withdrew:\n{delta}{setup['token_symbol']}.\nYour balance is now {new_balance} {setup['token_symbol']}.",
                             disable_notification=True,
                         )
+                            # logger.info(f"Message sent for withdrawn tokens to {setup["chat_id"]}")
 
                 else:
                     pass
@@ -126,6 +141,7 @@ async def check_stake_watch():
                             text=f"🔥 ALERT: A stake from your *{name}* wallet is being withdrawn! 🔥\nIf this action isn't yours, act NOW and secure your wallet! 🔒",
                             parse_mode="Markdown",
                             disable_notification=True,)
+                            logger.info(f"Message sent for stake alert to {setup["chat_id"]}")
                         else:
                             continue
                     else:
