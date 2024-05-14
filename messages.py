@@ -386,11 +386,11 @@ async def use_buttons(user_language):
 
 async def too_many_setups(user_language):
     if user_language == "fr":
-        return f"Vous avez atteint la limite de 5 alertes gratuites.\nPour en ajouter plus, supprimez-en une existante ou abonnez-vous.(fonctionnalité en cours de développement...)"
+        return f"Vous avez atteint la limite de 5 alertes gratuites.\nPour en ajouter plus, supprimez-en une existante ou abonnez-vous."
     elif user_language == "es":
-        return f"Has alcanzado el límite de 5 alertas gratuitas.\nPara añadir más, elimina una existente o suscríbete.(característica en desarrollo...)"
+        return f"Has alcanzado el límite de 5 alertas gratuitas.\nPara añadir más, elimina una existente o suscríbete."
     else:
-        return f"You've reached the limit of 5 free alerts.\nTo add more, delete an existing one or subscribe.(feature in development...)"
+        return f"You've reached the limit of 5 free alerts.\nTo add more, delete an existing one or subscribe."
 
 
 ##### DELETE SECTION
@@ -445,12 +445,13 @@ async def setup_to_delete_2(user_language):
 
 
 async def subscription_explanation(user_language):
+
     if user_language == "fr":
-        return f"Pour le moment, vous pouvez avoir jusqu'à 5 alertes dans la version gratuite.\n\nD'autres abonnements seront disponibles bientôt..."
+        return f"Pour le moment, vous pouvez avoir jusqu'à 5 alertes dans la version gratuite.\n\nD'autres abonnements seront disponibles bientôt...(fonctionnalité en cours de développement...)"
     elif user_language == "es":
-        return f"Por ahora, puedes tener hasta 5 alertas en la versión gratuita. \n\n¡Más suscripciones próximamente..."
+        return f"Por ahora, puedes tener hasta 5 alertas en la versión gratuita. \n\n¡Más suscripciones próximamente...(característica en desarrollo...)"
     else:
-        return f"You can have up to 5 alerts for now while on the free version.\n\nMore subscriptions to come..."
+        return f"You can have up to 5 alerts for now while on the free version.\n\nMore subscriptions to come...(feature in development...)"
 
 
 match_table = {
