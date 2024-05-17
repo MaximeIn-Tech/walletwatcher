@@ -533,11 +533,11 @@ async def track_sub_menu_1(update, context):
                 # If user doesn't have any wallets, prompt them to add a new wallet
                 await query.answer()
                 await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
-        else:
-            message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
+    else:
+        message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
 
-            # Use ensure_future to asynchronously delete the message after a delay
-            asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
+        # Use ensure_future to asynchronously delete the message after a delay
+        asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)

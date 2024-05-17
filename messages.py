@@ -520,7 +520,9 @@ Your current subscription is "{subscription}" and ends {end_date.strftime('%d/%m
             return f"""Welcome to the subscription menu.
 
 With a Free subscription, you can have up to 5 alerts.
+
 If you want more, you can subscribe to the Premium subscription, which will grant you 20 alerts.
+
 It costs 50€/year and is not an automatic renew. After 1 year, you'll be opted-out if you don't repay.
 You can pay multiple times and it will ad one year for every succesful payment.
 
