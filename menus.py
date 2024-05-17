@@ -448,3 +448,48 @@ async def remove_all_data_keyboard(user_language: str) -> InlineKeyboardMarkup:
         keyboard.append(buttons[i : i + max_options_per_row])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+########## Subscriptions menu ############
+
+
+async def subscription_menu_from_menus(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        [
+            InlineKeyboardButton(" 💳 Subscribe", callback_data="subscribe"),
+        ],
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+            InlineKeyboardButton("🏠 Main menu", callback_data="main"),
+        ],
+    ]
+
+    french_options = [
+        [
+            InlineKeyboardButton(" 💳 S'abonner", callback_data="subscribe"),
+        ],
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+            InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
+        ],
+    ]
+
+    spanish_options = [
+        [
+            InlineKeyboardButton("💳 Suscribirse", callback_data="subscribe"),
+        ],
+        [
+            InlineKeyboardButton("🔙", callback_data="settings_menu"),
+            InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
+        ],
+    ]
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

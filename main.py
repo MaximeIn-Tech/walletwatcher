@@ -3,17 +3,20 @@ import logging
 import os
 import re
 import socket
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from dotenv import load_dotenv
 from httpcore import ConnectError
-from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice, Update
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
     CommandHandler,
+    ContextTypes,
     MessageHandler,
-    Updater,
+    PreCheckoutQueryHandler,
+    ShippingQueryHandler,
     filters,
 )
 
@@ -41,6 +44,8 @@ logger = logging.getLogger(__name__)
 token = os.getenv("TELEGRAM_BOT_TOKEN")
 
 supabase = connect_to_database()
+
+PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
 
 ############################ Expressions #######################################
 
@@ -493,39 +498,46 @@ async def track_sub_menu_1(update, context):
 
     user = fetch_user_data(update.effective_chat.id)
     user_subscription = user[0]["subscription"]
+    end_date_of_subscription = user[0]["end_subscription"]
+    if end_date_of_subscription is not None:
+        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+
+
+    now = datetime.now(timezone.utc)
 
     allowed_subscriptions =  subscription_allowed_alerts.get(user_subscription, 5)
 
     if  user_setups.count < allowed_subscriptions:
-        if user_wallets.count > 0:
-            # User has existing wallets, display them in a menu
-            wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
-            buttons = []
+        if end_date_of_subscription is None or now < end_date_of_subscription:
+            if user_wallets.count > 0:
+                # User has existing wallets, display them in a menu
+                wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
+                buttons = []
 
-            # Generate buttons two by two
-            for i in range(0, len(wallets_data), 2):
-                row = []
-                for j in range(2):
-                    if i + j < len(wallets_data):
-                        wallet = wallets_data[i + j]
-                        row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
-                buttons.append(row)
+                # Generate buttons two by two
+                for i in range(0, len(wallets_data), 2):
+                    row = []
+                    for j in range(2):
+                        if i + j < len(wallets_data):
+                            wallet = wallets_data[i + j]
+                            row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
+                    buttons.append(row)
 
-            buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
+                buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
 
-            reply_markup = InlineKeyboardMarkup(buttons)
+                reply_markup = InlineKeyboardMarkup(buttons)
 
-            await query.answer()
-            await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
+                await query.answer()
+                await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
+            else:
+                # If user doesn't have any wallets, prompt them to add a new wallet
+                await query.answer()
+                await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
         else:
-            # If user doesn't have any wallets, prompt them to add a new wallet
-            await query.answer()
-            await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
-    else:
-        message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
+            message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
 
-        # Use ensure_future to asynchronously delete the message after a delay
-        asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
+            # Use ensure_future to asynchronously delete the message after a delay
+            asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -949,8 +961,73 @@ async def subscription_menu(update, context):
     await query.answer()
     await query.edit_message_text(
         text=await subscription_explanation(language),
-        reply_markup=await back_to_settings_menu(language),
+        reply_markup=await subscription_menu_from_menus(language),
     )
+
+async def subscription_callback(update, context):
+    language = await get_language_for_chat_id(update.effective_chat.id)
+    query = update.callback_query
+    await query.answer()
+    await send_subscription_invoice(update, context)
+
+
+async def send_subscription_invoice(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Sends an invoice without shipping-payment."""
+    query = update.callback_query
+    chat_id = query.message.chat_id
+    title = "Subscription for 12 months of Premium."
+    photo_url = "https://i.ibb.co/HBvGRZq/Untitled-Design.png"
+    photo_height = "1024"
+    photo_width = "1024"
+    description = "Get access to a Premium subscription for 12 months. This allows you to get up to 20 alerts. It is not renewed automatically each year."
+    # select a payload just for you to recognize its the donation from your bot
+    payload = "Custom-Payload"
+    start_parameter = "start"
+    # In order to get a provider_token see https://core.telegram.org/bots/payments#getting-a-token
+    currency = "EUR"
+    # price in dollars
+    price = 50
+    # price * 100 so as to include 2 decimal points
+    prices = [LabeledPrice("Test", price * 100)]
+
+    # optionally pass need_name=True, need_phone_number=True,
+    # need_email=True, need_shipping_address=True, is_flexible=True
+    await context.bot.send_invoice(
+        chat_id, title, description, payload, PAYMENT_PROVIDER_TOKEN, currency, prices,start_parameter, photo_url, photo_height=photo_height, photo_width=photo_width, 
+    )
+
+# after (optional) shipping, it's the pre-checkout
+async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Answers the PreQecheckoutQuery"""
+    query = update.pre_checkout_query
+    # check the payload, is this from your bot?
+    if query.invoice_payload != "Custom-Payload":
+        # answer False pre_checkout_query
+        await query.answer(ok=False, error_message="Something went wrong...")
+    else:
+        await query.answer(ok=True)
+
+
+# finally, after contacting the payment provider...
+async def successful_payment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Confirms the successful payment."""
+    chat_id = update.message.chat_id
+    print(chat_id)
+    now = datetime.now()
+    year = timedelta(days=365)
+    date_in_a_year = now + year
+
+    now_str = now.isoformat()
+    date_in_a_year_str = date_in_a_year.isoformat()
+    
+    supabase = connect_to_database()
+
+    data = supabase.table("Users").update({"subscription": "Premium","start_subscription":now_str, "end_subscription": date_in_a_year_str}).eq("chat_id", chat_id).execute()
+
+    # do something after successfully receiving payment?
+    await update.message.reply_text("Thank you for your payment! You now have access to the Premium subscription")
 
 
 if __name__ == "__main__":
@@ -1018,6 +1095,9 @@ if __name__ == "__main__":
     application.add_handler(
         CallbackQueryHandler(handle_data_collection, pattern="data_collection")
     )
+    application.add_handler(
+        CallbackQueryHandler(subscription_callback, pattern="subscribe")
+    )
 
 
     ############################ Naming Wallet Handlers #########################################
@@ -1029,6 +1109,16 @@ if __name__ == "__main__":
 
     ############################ MESSAGE HANDLERS ############################
     ############################ Add Track Handlers ############################
+
+    # Pre-checkout handler to final check
+    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+
+    # Success! Notify your user!
+    application.add_handler(
+        MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback)
+    )
+
+
     application.add_handler(MessageHandler(filters.Text(), handle_messages))
 
     print("Start polling ...")
