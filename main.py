@@ -956,16 +956,23 @@ async def language_selection(update, context):
 ############################ Subscriptions ####################################
 
 async def subscription_menu(update, context):
-    language = await get_language_for_chat_id(update.effective_chat.id)
+    chat_id = update.effective_chat.id
+    language = await get_language_for_chat_id(chat_id)
+    user = fetch_user_data(update.effective_chat.id)
+    user_subscription = user[0]["subscription"]
+    end_date_of_subscription = user[0]["end_subscription"]
+    if end_date_of_subscription:
+        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+    else:
+        end_date_of_subscription = None
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        text=await subscription_explanation(language),
+        text=await subscription_explanation(language,user_subscription,end_date_of_subscription),
         reply_markup=await subscription_menu_from_menus(language),
     )
 
 async def subscription_callback(update, context):
-    language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     await query.answer()
     await send_subscription_invoice(update, context)
@@ -977,12 +984,22 @@ async def send_subscription_invoice(
     """Sends an invoice without shipping-payment."""
     query = update.callback_query
     chat_id = query.message.chat_id
-    title = "Subscription for 12 months of Premium."
+    language = await get_language_for_chat_id(chat_id)
+
+    if language == "fr":
+        title = "Abonnement de 12 mois Premium."
+        description = "Accédez à un abonnement Premium de 12 mois. Cela vous permet d'obtenir jusqu'à 20 alertes. Il n'est pas renouvelé automatiquement chaque année."
+    elif language == "es":
+        title = "Suscripción de 12 meses de Premium."
+        description = "Obtenga acceso a una suscripción Premium durante 12 meses. Esto le permite recibir hasta 20 alertas. No se renueva automáticamente cada año."
+    else:  # Default to English
+        title = "Subscription for 12 months of Premium."
+        description = "Get access to a Premium subscription for 12 months. This allows you to get up to 20 alerts. It is not renewed automatically each year."
+
     photo_url = "https://i.ibb.co/HBvGRZq/Untitled-Design.png"
     photo_height = "1024"
     photo_width = "1024"
-    description = "Get access to a Premium subscription for 12 months. This allows you to get up to 20 alerts. It is not renewed automatically each year."
-    # select a payload just for you to recognize its the donation from your bot
+    # select a payload just for you to recognize it's the donation from your bot
     payload = "Custom-Payload"
     start_parameter = "start"
     # In order to get a provider_token see https://core.telegram.org/bots/payments#getting-a-token
@@ -995,8 +1012,9 @@ async def send_subscription_invoice(
     # optionally pass need_name=True, need_phone_number=True,
     # need_email=True, need_shipping_address=True, is_flexible=True
     await context.bot.send_invoice(
-        chat_id, title, description, payload, PAYMENT_PROVIDER_TOKEN, currency, prices,start_parameter, photo_url, photo_height=photo_height, photo_width=photo_width, 
+        chat_id, title, description, payload, PAYMENT_PROVIDER_TOKEN, currency, prices, start_parameter, photo_url, photo_height=photo_height, photo_width=photo_width,
     )
+
 
 # after (optional) shipping, it's the pre-checkout
 async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -1014,20 +1032,32 @@ async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYP
 async def successful_payment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Confirms the successful payment."""
     chat_id = update.message.chat_id
-    print(chat_id)
+    language = await get_language_for_chat_id(chat_id)
     now = datetime.now()
     year = timedelta(days=365)
-    date_in_a_year = now + year
 
-    now_str = now.isoformat()
-    date_in_a_year_str = date_in_a_year.isoformat()
-    
     supabase = connect_to_database()
 
-    data = supabase.table("Users").update({"subscription": "Premium","start_subscription":now_str, "end_subscription": date_in_a_year_str}).eq("chat_id", chat_id).execute()
+    # Fetch the current subscription end date
+    response = supabase.table("Users").select("end_subscription").eq("chat_id", chat_id).execute()
+    current_subscription = response.data[0] if response.data else None
+    end_date_of_subscription = current_subscription["end_subscription"] if current_subscription else None
+
+    if end_date_of_subscription:
+        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+        new_end_date = end_date_of_subscription + year
+        subscription_message = await subscription_succesfull_more_time(language, new_end_date)
+    else:
+        new_end_date = now + year
+        subscription_message = await subscription_succesfull_first_time(language, new_end_date)
+
+    now_str = now.isoformat()
+    new_end_date_str = new_end_date.isoformat()
+
+    data = supabase.table("Users").update({"subscription": "Premium","start_subscription":now_str, "end_subscription": new_end_date_str}).eq("chat_id", chat_id).execute()
 
     # do something after successfully receiving payment?
-    await update.message.reply_text("Thank you for your payment! You now have access to the Premium subscription")
+    await update.message.reply_text(text = subscription_message, reply_markup=await back_to_to_main_keyboard(language))
 
 
 if __name__ == "__main__":
