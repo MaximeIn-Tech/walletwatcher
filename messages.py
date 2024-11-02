@@ -99,11 +99,11 @@ async def donation_message(user_language: str):
         return """🎉 Si vous souhaitez soutenir mon travail et contribuer aux coûts du bot, vous pouvez faire un don aux adresses ci-dessous :
 
 Pour les jetons TNT-20 :
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 Pour les jetons ERC-20 :
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 Pour les jetons BEP-20 :
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 
 Pour tout autre don, veuillez m'envoyer un message direct @TechSherpa.
 
@@ -114,11 +114,11 @@ TechSherpa 🦙
         return """🎉 Si deseas apoyar mi trabajo y ayudar a cubrir los costos del bot, puedes donar a las siguientes direcciones:
 
 Para los tokens TNT-20:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 Para los tokens ERC-20:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 Para los tokens BEP-20:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 
 Para cualquier otra donación, por favor envíame un mensaje directo a @TechSherpa.
 
@@ -129,11 +129,11 @@ TechSherpa 🦙
         return """🎉 If you want to support my work and support the cost of the bot, you can donate on these addresses below:
 
 For TNT-20 tokens:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 For ERC-20 tokens:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 For BEP-20 tokens:
-    0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
+-> 0xf383d4c2656bb5642efe0cf54c90b826b2991a5f
 
 For any other donations, please send me a direct message @TechSherpa.
 

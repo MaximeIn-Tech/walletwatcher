@@ -80,7 +80,7 @@ async def check_balance():
                     #     print("Next iteration, delta < trigger point.")
                     #     continue
                     else:
-                        user_language = get_language_for_chat_id(setup["chat_id"])
+                        user_language = await get_language_for_chat_id(setup["chat_id"])
                         if delta > 0 and delta > setup["trigger_point"]:
                             # French message
                             if user_language == "fr":
@@ -175,12 +175,14 @@ async def check_stake_watch():
                         withdrawn_values_from_api.append(item["withdrawn"])
                     if any(withdrawn_values_from_api):
                         if withdrawn_values_from_api != withdrawn_values_from_db:
-                            user_language = get_language_for_chat_id(setup["chat_id"])
+                            user_language = await get_language_for_chat_id(
+                                setup["chat_id"]
+                            )
                             # French message
                             if user_language == "fr":
                                 await bot.send_message(
                                     chat_id=setup["chat_id"],
-                                    text=f"🔥 ALERT : Un enjeu de votre portefeuille *{name}* est en cours de retrait ! 🔥\nSi cette action n'est pas la vôtre, agissez MAINTENANT et sécurisez votre portefeuille ! 🔒",
+                                    text=f"🔥 ALERTE : Un stake de votre portefeuille *{name}* est en cours de retrait ! 🔥\nSi cette action n'est pas la vôtre, agissez MAINTENANT et sécurisez votre portefeuille ! 🔒",
                                     parse_mode="Markdown",
                                     disable_notification=True,
                                 )
