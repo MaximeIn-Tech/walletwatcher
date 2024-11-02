@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ContextTypes
+from tqdm import tqdm
 
 from database import *
 
@@ -29,7 +30,8 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     users = supabase.table("Users").select("chat_id").execute()
 
     if users.data:
-        for user in users.data:
+        # Create a progress bar for sending messages
+        for user in tqdm(users.data, desc="Sending messages", unit="user"):
             chat_id = user["chat_id"]
             try:
                 await context.bot.send_message(chat_id, message)
@@ -59,29 +61,37 @@ async def broadcast_message_test(
         )
         return
 
-    # Test Chat ID for broadcasting
-    TEST_CHAT_ID = "6269998887"  # Replace with actual chat ID
+    # List of user chat IDs to broadcast the message to
+    user_chat_ids = [
+        "1355080202",
+        "6269998887",
+    ]  # Replace with actual chat IDs
 
     # If a photo is attached, send the photo with the caption
     if update.message.photo:
         photo = update.message.photo[
             -1
         ].file_id  # Use the highest resolution photo available
-        try:
-            await context.bot.send_photo(
-                chat_id=TEST_CHAT_ID, photo=photo, caption=message or "Photo from admin"
-            )
-            await update.message.reply_text("Photo and message sent to the test user.")
-        except Exception as e:
-            print(f"Failed to send photo and message: {e}")
-            await update.message.reply_text(
-                "Failed to send photo and message to the test user."
-            )
+        for chat_id in tqdm(
+            user_chat_ids, desc="Sending photo and message", unit="user"
+        ):
+            try:
+                await context.bot.send_photo(
+                    chat_id=chat_id, photo=photo, caption=message or "Photo from admin"
+                )
+                await context.bot.send_message(chat_id, "Photo and message sent.")
+            except Exception as e:
+                print(f"Failed to send photo and message to {chat_id}: {e}")
+                await context.bot.send_message(
+                    chat_id, "Failed to send photo and message."
+                )
+
     else:
         # If no photo, send the message only
-        try:
-            await context.bot.send_message(TEST_CHAT_ID, message)
-            await update.message.reply_text("Message sent to the test user.")
-        except Exception as e:
-            print(f"Failed to send message: {e}")
-            await update.message.reply_text("Failed to send message to the test user.")
+        for chat_id in tqdm(user_chat_ids, desc="Sending messages", unit="user"):
+            try:
+                await context.bot.send_message(chat_id, message)
+                await context.bot.send_message(chat_id, "Message sent.")
+            except Exception as e:
+                print(f"Failed to send message to {chat_id}: {e}")
+                await context.bot.send_message(chat_id, "Failed to send message.")

@@ -1434,7 +1434,7 @@ if __name__ == "__main__":
         MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback)
     )
 
-    application.add_handler(CommandHandler("broadcast", broadcast_message_test))
+    application.add_handler(CommandHandler("broadcast", broadcast_message))
 
     application.add_handler(MessageHandler(filters.Text(), handle_messages))
 
