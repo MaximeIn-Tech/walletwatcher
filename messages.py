@@ -190,6 +190,34 @@ async def settings_message(user_language: str):
         return "Please choose a setting you want to adjust:"
 
 
+async def slots_message_explanation(user_language: str, slots: int):
+    if user_language == "fr":
+        return f"""Vous avez actuellement {slots} slots d'alerte disponibles.
+
+Vous pouvez acheter plus de slots et augmenter le nombre d'alertes que vous pouvez avoir.
+
+Chaque slot coûte 2€ (achat unique) et durera éternellement.
+
+Combien de slots souhaitez-vous acheter ? Veuillez entrer un nombre !
+"""
+    elif user_language == "es":
+        return f"""Actualmente tienes {slots} espacios de alerta disponibles.
+
+Puedes comprar más espacios y aumentar el número de alertas que puedes tener.
+
+Cada espacio cuesta 2€ (compra única) y durará para siempre.
+
+¿Cuántos espacios quieres comprar? ¡Por favor, introduce un número!"""
+    else:
+        return f"""You currently have {slots} alert slots available.
+
+You can buy more slots and increase the number of alerts you can have.
+
+Each slot is 2€ (one time purchase) and will last you forever.
+
+How many slots do you want to buy? Please enter a number!"""
+
+
 async def language_selection_message(user_language: str):
     if user_language == "fr":
         return "Choisissez une langue:"
@@ -386,11 +414,11 @@ async def use_buttons(user_language):
 
 async def too_many_setups(user_language):
     if user_language == "fr":
-        return f"Vous avez atteint votre limite d'alerte.\nPour en ajouter plus, supprimez-en une existante ou abonnez-vous."
+        return f"Vous avez atteint votre limite d'alerte.\nPour en ajouter plus, supprimez une alerte existante ou achetez plus de slots."
     elif user_language == "es":
-        return f"Ha alcanzado su límite de alerta.\nPara añadir más, elimina una existente o suscríbete."
+        return f"Ha alcanzado su límite de alerta.\nPara agregar más, elimina una existente o compra más espacios."
     else:
-        return f"You've reached your alert limit.\nTo add more, delete an existing one or subscribe."
+        return f"You've reached your alert limit.\nTo add more, delete an existing one or buy more slots."
 
 
 ##### DELETE SECTION
@@ -441,113 +469,126 @@ async def setup_to_delete_2(user_language):
         return f"Please select one you want to delete."
 
 
+############# Slots Messages ######################
+
+
+async def slots_successfull_payment(user_language, new_total_slots):
+
+    if user_language == "fr":
+        return f"Merci pour votre paiement ! Vous avez maintenant un total de {new_total_slots} slots."
+    elif user_language == "es":
+        return f"¡Gracias por tu compra! Ahora tienes un total de {new_total_slots} slot(s)."
+    else:
+        return f"Thank you for your purchase! You now have a total of {new_total_slots} slot(s)."
+
+
 ############# Subscriptions Menus ######################
 
 
-async def subscription_explanation(user_language, subscription, end_date):
+# async def subscription_explanation(user_language, subscription, end_date):
 
-    if user_language == "fr":
-        if subscription and subscription != "Free" and end_date:
-            return f"""Bienvenue dans le menu d'abonnement.
+#     if user_language == "fr":
+#         if subscription and subscription != "Free" and end_date:
+#             return f"""Bienvenue dans le menu d'abonnement.
 
-Avec un abonnement gratuit, vous pouvez bénéficier jusqu'à 5 alertes.
+# Avec un abonnement gratuit, vous pouvez bénéficier jusqu'à 5 alertes.
 
-Si vous en voulez plus, vous pouvez vous abonner à l'abonnement Premium, qui vous donnera accès à 20 alertes.
+# Si vous en voulez plus, vous pouvez vous abonner à l'abonnement Premium, qui vous donnera accès à 20 alertes.
 
-Il coûte 50€/an et n'est pas renouvelé automatiquement. Après 1 an, vous serez désabonné si vous ne renouvelez pas.
-Vous pouvez payer plusieurs fois et cela ajoutera un an pour chaque paiement réussi.
+# Il coûte 50€/an et n'est pas renouvelé automatiquement. Après 1 an, vous serez désabonné si vous ne renouvelez pas.
+# Vous pouvez payer plusieurs fois et cela ajoutera un an pour chaque paiement réussi.
 
-Si vous souhaitez vous abonner, cliquez sur le bouton ci-dessous.
+# Si vous souhaitez vous abonner, cliquez sur le bouton ci-dessous.
 
-Votre abonnement actuel est "{subscription}" et se termine le {end_date.strftime('%d/%m/%Y à %H:%M:%S')}.
-        """
-        else:
-            return f"""Bienvenue dans le menu d'abonnement.
+# Votre abonnement actuel est "{subscription}" et se termine le {end_date.strftime('%d/%m/%Y à %H:%M:%S')}.
+#         """
+#         else:
+#             return f"""Bienvenue dans le menu d'abonnement.
 
-Avec un abonnement gratuit, vous pouvez bénéficier jusqu'à 5 alertes.
+# Avec un abonnement gratuit, vous pouvez bénéficier jusqu'à 5 alertes.
 
-Si vous en voulez plus, vous pouvez vous abonner à l'abonnement Premium, qui vous donnera accès à 20 alertes.
+# Si vous en voulez plus, vous pouvez vous abonner à l'abonnement Premium, qui vous donnera accès à 20 alertes.
 
-Il coûte 50€/an et n'est pas renouvelé automatiquement. Après 1 an, vous serez désabonné si vous ne renouvelez pas.
-Vous pouvez payer plusieurs fois et cela ajoutera un an pour chaque paiement réussi.
+# Il coûte 50€/an et n'est pas renouvelé automatiquement. Après 1 an, vous serez désabonné si vous ne renouvelez pas.
+# Vous pouvez payer plusieurs fois et cela ajoutera un an pour chaque paiement réussi.
 
-Si vous souhaitez vous abonner, cliquez sur le bouton ci-dessous.
-        """
-    elif user_language == "es":
-        if subscription and subscription != "Free" and end_date:
-            return f"""Bienvenido al menú de suscripción.
-
-
-Con una suscripción gratuita, puedes tener hasta 5 alertas.
-
-Si deseas más, puedes suscribirte a la suscripción Premium, que te concederá 20 alertas.
-
-Cuesta 50€/año y no se renueva automáticamente. Después de 1 año, serás dado de baja si no renuevas.
-Puedes pagar varias veces y se añadirá un año por cada pago exitoso.
-
-Si deseas suscribirte, haz clic en el botón a continuación.
-
-Tu suscripción actual es "{subscription}" y termina el {end_date.strftime('%d/%m/%Y a las %H:%M:%S')}.
-"""
-        else:
-            return f"""Bienvenido al menú de suscripción.
-
-Con una suscripción gratuita, puedes tener hasta 5 alertas.
-
-Si deseas más, puedes suscribirte a la suscripción Premium, que te concederá 20 alertas.
-
-Cuesta 50€/año y no se renueva automáticamente. Después de 1 año, serás dado de baja si no renuevas.
-Puedes pagar varias veces y se añadirá un año por cada pago exitoso.
-
-Si deseas suscribirte, haz clic en el botón a continuación.
-"""
-    else:
-        if subscription and subscription != "Free" and end_date:
-            return f"""Welcome to the subscription menu.
-
-With a Free subscription, you can have up to 5 alerts.
-
-If you want more, you can subscribe to the Premium subscription, which will grant you 20 alerts.
-
-It costs 50€/year and is not an automatic renew. After 1 year, you'll be opted-out if you don't repay.
-You can pay multiple times and it will ad one year for every succesful payment.
-
-If you want to subscribe, click the button below.
-
-Your current subscription is "{subscription}" and ends {end_date.strftime('%d/%m/%Y at %H:%M:%S')}
-"""
-        else:
-            return f"""Welcome to the subscription menu.
-
-With a Free subscription, you can have up to 5 alerts.
-
-If you want more, you can subscribe to the Premium subscription, which will grant you 20 alerts.
-
-It costs 50€/year and is not an automatic renew. After 1 year, you'll be opted-out if you don't repay.
-You can pay multiple times and it will ad one year for every succesful payment.
-
-If you want to subscribe, click the button below.
-"""
+# Si vous souhaitez vous abonner, cliquez sur le bouton ci-dessous.
+#         """
+#     elif user_language == "es":
+#         if subscription and subscription != "Free" and end_date:
+#             return f"""Bienvenido al menú de suscripción.
 
 
-async def subscription_succesfull_first_time(user_language, new_end_date):
+# Con una suscripción gratuita, puedes tener hasta 5 alertas.
 
-    if user_language == "fr":
-        return f"Merci pour votre paiement ! Vous avez maintenant accès à l'abonnement Premium jusqu'au {new_end_date.strftime('%Y-%m-%d')}."
-    elif user_language == "es":
-        return f"¡Gracias por tu pago! Ahora tienes acceso a la suscripción Premium hasta el {new_end_date.strftime('%Y-%m-%d')}."
-    else:
-        return f"Thank you for your payment! You now have access to the Premium subscription until {new_end_date.strftime('%Y-%m-%d')}."
+# Si deseas más, puedes suscribirte a la suscripción Premium, que te concederá 20 alertas.
+
+# Cuesta 50€/año y no se renueva automáticamente. Después de 1 año, serás dado de baja si no renuevas.
+# Puedes pagar varias veces y se añadirá un año por cada pago exitoso.
+
+# Si deseas suscribirte, haz clic en el botón a continuación.
+
+# Tu suscripción actual es "{subscription}" y termina el {end_date.strftime('%d/%m/%Y a las %H:%M:%S')}.
+# """
+#         else:
+#             return f"""Bienvenido al menú de suscripción.
+
+# Con una suscripción gratuita, puedes tener hasta 5 alertas.
+
+# Si deseas más, puedes suscribirte a la suscripción Premium, que te concederá 20 alertas.
+
+# Cuesta 50€/año y no se renueva automáticamente. Después de 1 año, serás dado de baja si no renuevas.
+# Puedes pagar varias veces y se añadirá un año por cada pago exitoso.
+
+# Si deseas suscribirte, haz clic en el botón a continuación.
+# """
+#     else:
+#         if subscription and subscription != "Free" and end_date:
+#             return f"""Welcome to the subscription menu.
+
+# With a Free subscription, you can have up to 5 alerts.
+
+# If you want more, you can subscribe to the Premium subscription, which will grant you 20 alerts.
+
+# It costs 50€/year and is not an automatic renew. After 1 year, you'll be opted-out if you don't repay.
+# You can pay multiple times and it will ad one year for every succesful payment.
+
+# If you want to subscribe, click the button below.
+
+# Your current subscription is "{subscription}" and ends {end_date.strftime('%d/%m/%Y at %H:%M:%S')}
+# """
+#         else:
+#             return f"""Welcome to the subscription menu.
+
+# With a Free subscription, you can have up to 5 alerts.
+
+# If you want more, you can subscribe to the Premium subscription, which will grant you 20 alerts.
+
+# It costs 50€/year and is not an automatic renew. After 1 year, you'll be opted-out if you don't repay.
+# You can pay multiple times and it will ad one year for every succesful payment.
+
+# If you want to subscribe, click the button below.
+# """
+
+# NOTE : Le système d'abonnement est complètement mis de côté.
+# async def subscription_succesfull_first_time(user_language, new_end_date):
+
+#     if user_language == "fr":
+#         return f"Merci pour votre paiement ! Vous avez maintenant accès à l'abonnement Premium jusqu'au {new_end_date.strftime('%Y-%m-%d')}."
+#     elif user_language == "es":
+#         return f"¡Gracias por tu pago! Ahora tienes acceso a la suscripción Premium hasta el {new_end_date.strftime('%Y-%m-%d')}."
+#     else:
+#         return f"Thank you for your payment! You now have access to the Premium subscription until {new_end_date.strftime('%Y-%m-%d')}."
 
 
-async def subscription_succesfull_more_time(user_language, new_end_date):
+# async def subscription_succesfull_more_time(user_language, new_end_date):
 
-    if user_language == "fr":
-        return f"Merci d'avoir renouvelé votre abonnement ! Votre accès Premium a été prolongé jusqu'au {new_end_date.strftime('%Y-%m-%d')}."
-    elif user_language == "es":
-        return f"¡Gracias por renovar tu suscripción! Tu acceso Premium ha sido extendido hasta el {new_end_date.strftime('%Y-%m-%d')}."
-    else:
-        return f"Thank you for renewing your subscription! Your Premium access has been extended until {new_end_date.strftime('%Y-%m-%d')}."
+#     if user_language == "fr":
+#         return f"Merci d'avoir renouvelé votre abonnement ! Votre accès Premium a été prolongé jusqu'au {new_end_date.strftime('%Y-%m-%d')}."
+#     elif user_language == "es":
+#         return f"¡Gracias por renovar tu suscripción! Tu acceso Premium ha sido extendido hasta el {new_end_date.strftime('%Y-%m-%d')}."
+#     else:
+#         return f"Thank you for renewing your subscription! Your Premium access has been extended until {new_end_date.strftime('%Y-%m-%d')}."
 
 
 match_table = {

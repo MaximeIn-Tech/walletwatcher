@@ -234,21 +234,21 @@ async def settings_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
 
     english_options = [
         InlineKeyboardButton("🌏 Language", callback_data="language_menu"),
-        InlineKeyboardButton("💳 Subscriptions", callback_data="subscriptions_menu"),
+        InlineKeyboardButton("💳 More wallets", callback_data="slots"),
         InlineKeyboardButton("❌ Delete all data", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Main menu", callback_data="main"),
     ]
 
     french_options = [
         InlineKeyboardButton("🌏 Langue", callback_data="language_menu"),
-        InlineKeyboardButton("💳 Abonnements", callback_data="subscriptions_menu"),
+        InlineKeyboardButton("💳 Plus de portefeuilles", callback_data="slots"),
         InlineKeyboardButton("❌ Supprimer mes données", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
     spanish_options = [
         InlineKeyboardButton("🌏 Idioma", callback_data="language_menu"),
-        InlineKeyboardButton("💳 Suscripciones", callback_data="subscriptions_menu"),
+        InlineKeyboardButton("💳 Más billeteras", callback_data="slots"),
         InlineKeyboardButton("❌ Eliminar mis datos", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
     ]

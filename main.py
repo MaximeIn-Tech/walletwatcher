@@ -8,7 +8,13 @@ from enum import Enum
 
 from dotenv import load_dotenv
 from httpcore import ConnectError
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice, Update
+from telegram import (
+    ForceReply,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    LabeledPrice,
+    Update,
+)
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
@@ -20,9 +26,11 @@ from telegram.ext import (
     filters,
 )
 
+from admin import broadcast_message, broadcast_message_test
 from database import *
 from menus import *
 from messages import *
+from payment import *
 from wallets import *
 
 load_dotenv()
@@ -45,7 +53,6 @@ token = os.getenv("TELEGRAM_BOT_TOKEN")
 
 supabase = connect_to_database()
 
-PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
 
 ############################ Expressions #######################################
 
@@ -90,12 +97,14 @@ PREDEFINED_TOKENS = {
 
 ############################ Utilities  #########################################
 
+
 async def delete_message_after_delay(bot, chat_id, message_id, delay):
     await asyncio.sleep(delay)
     await bot.delete_message(chat_id=chat_id, message_id=message_id)
 
 
 ############################ Bot Menus #########################################
+
 
 async def start(update, context):
     try:
@@ -121,7 +130,7 @@ async def start(update, context):
                     {
                         "chat_id": context.user_data["chat_id"],
                         "language": context.user_data["language"],
-                        "subscription": "Free",
+                        "slots": "2",
                     }
                 )
                 .execute()
@@ -129,19 +138,21 @@ async def start(update, context):
             logger.info(f"User {context.user_data['chat_id']} added.")
         else:
             # User exists, update the language if not available in the database
-            if existing_user.data[0]['language'] is None:
+            if existing_user.data[0]["language"] is None:
                 (
                     supabase.table("Users")
                     .update({"language": context.user_data["language"]})
                     .eq("chat_id", context.user_data["chat_id"])
                     .execute()
                 )
-                logger.info(f"Language updated for user {context.user_data['chat_id']}.")
+                logger.info(
+                    f"Language updated for user {context.user_data['chat_id']}."
+                )
 
         # Use the language from the database if available, else fallback to Telegram language
         user_language = (
-            existing_user.data[0]['language']
-            if existing_user.data and existing_user.data[0]['language']
+            existing_user.data[0]["language"]
+            if existing_user.data and existing_user.data[0]["language"]
             else language
         )
 
@@ -163,6 +174,7 @@ async def main_menu(update, context):
         reply_markup=await main_menu_keyboard(language),
     )
 
+
 async def help(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -172,6 +184,7 @@ async def help(update, context):
         reply_markup=await help_menu_keyboard(language),
     )
 
+
 async def handle_privacy(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -180,7 +193,8 @@ async def handle_privacy(update, context):
         text=await privacy_message(language),
         reply_markup=await back_to_help_menu(language),
     )
-    
+
+
 async def handle_donation(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -189,6 +203,7 @@ async def handle_donation(update, context):
         text=await donation_message(language),
         reply_markup=await back_to_help_menu(language),
     )
+
 
 async def handle_data_collection(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -199,7 +214,9 @@ async def handle_data_collection(update, context):
         reply_markup=await back_to_help_menu(language),
     )
 
+
 ############################ Wallets Section #########################################
+
 
 async def show_wallets(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -210,7 +227,7 @@ async def show_wallets(update, context):
     user_wallets = await fetch_wallets_user(chat_id)
 
     if user_wallets.count > 0:
-        wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
+        wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower())
         buttons = []
 
         # Generate buttons two by two
@@ -219,7 +236,12 @@ async def show_wallets(update, context):
             for j in range(2):
                 if i + j < len(wallets_data):
                     wallet = wallets_data[i + j]
-                    row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"wallet_{wallet['wallet_address']}"))
+                    row.append(
+                        InlineKeyboardButton(
+                            wallet["wallet_name"],
+                            callback_data=f"wallet_{wallet['wallet_address']}",
+                        )
+                    )
             buttons.append(row)
 
         buttons.append([InlineKeyboardButton("🔙", callback_data="main_menu")])
@@ -239,11 +261,14 @@ async def show_wallets(update, context):
             reply_markup=await back_to_to_main_keyboard(language),
         )
 
+
 async def handle_wallet_selection(update, context):
-    chat_id=update.effective_chat.id
+    chat_id = update.effective_chat.id
     language = await get_language_for_chat_id(chat_id)
     query = update.callback_query
-    wallet_address = query.data.split("_")[1]  # Extract wallet address from callback data
+    wallet_address = query.data.split("_")[
+        1
+    ]  # Extract wallet address from callback data
 
     # Fetch all setups associated with the selected wallet address
     setups = await fetch_setup_wallet(wallet_address, chat_id)
@@ -267,7 +292,9 @@ async def handle_wallet_selection(update, context):
             reply_markup=await back_to_list_wallets(language),
         )
 
+
 ########################## Remove Wallet #######################################
+
 
 async def generate_setup_buttons_and_alerts(setups, language, alert):
     buttons = []
@@ -275,7 +302,11 @@ async def generate_setup_buttons_and_alerts(setups, language, alert):
     alert = await alert_text(language)
     row = []
     for index, setup in enumerate(setups.data, start=1):
-        row.append(InlineKeyboardButton(f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}"))
+        row.append(
+            InlineKeyboardButton(
+                f"{alert} {index}", callback_data=f"delete_setup_{setup['id']}"
+            )
+        )
         if len(row) == 2:  # Two buttons per row
             buttons.append(row)
             row = []  # Reset the row for the next pair of buttons
@@ -283,19 +314,51 @@ async def generate_setup_buttons_and_alerts(setups, language, alert):
             alerts_to_display.append(
                 f"""\n{alert} {index}:
 Blockchain : {setup["blockchain"]}"""
-                + (f"\nToken : {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
-                + (f"\nContract Address : {setup['contract_address']}" if setup['contract_address'] is not None else '')
-                + (f"\nSeuil de déclenchement : {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
-                + (f"\nSolde actuelle : {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+                + (
+                    f"\nToken : {setup['token_symbol']}"
+                    if setup["token_symbol"] is not None
+                    else ""
+                )
+                + (
+                    f"\nContract Address : {setup['contract_address']}"
+                    if setup["contract_address"] is not None
+                    else ""
+                )
+                + (
+                    f"\nSeuil de déclenchement : {setup['trigger_point']}"
+                    if setup["trigger_point"] is not None
+                    else ""
+                )
+                + (
+                    f"\nSolde actuelle : {setup['balance']} {setup['token_symbol']}"
+                    if setup["balance"] is not None
+                    else ""
+                )
             )
         elif language == "es":
             alerts_to_display.append(
                 f"""\n{alert} {index}:
 Blockchain: {setup["blockchain"]}"""
-                + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
-                + (f"\nDirección del Contrato: {setup['contract_address']}" if setup['contract_address'] is not None else '')
-                + (f"\nPunto de Activación: {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
-                + (f"\nSaldo: {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+                + (
+                    f"\nToken: {setup['token_symbol']}"
+                    if setup["token_symbol"] is not None
+                    else ""
+                )
+                + (
+                    f"\nDirección del Contrato: {setup['contract_address']}"
+                    if setup["contract_address"] is not None
+                    else ""
+                )
+                + (
+                    f"\nPunto de Activación: {setup['trigger_point']}"
+                    if setup["trigger_point"] is not None
+                    else ""
+                )
+                + (
+                    f"\nSaldo: {setup['balance']} {setup['token_symbol']}"
+                    if setup["balance"] is not None
+                    else ""
+                )
             )
         # Add more language conditions as needed
         else:
@@ -303,10 +366,26 @@ Blockchain: {setup["blockchain"]}"""
             alerts_to_display.append(
                 f"""\n{alert} {index}:
 Blockchain: {setup["blockchain"]}"""
-                + (f"\nToken: {setup['token_symbol']}" if setup['token_symbol'] is not None else '')
-                + (f"\nContract Address: {setup['contract_address']}" if setup['contract_address'] is not None else '')
-                + (f"\nTrigger Point: {setup['trigger_point']}" if setup['trigger_point'] is not None else '')
-                + (f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}" if setup['balance'] is not None else '')
+                + (
+                    f"\nToken: {setup['token_symbol']}"
+                    if setup["token_symbol"] is not None
+                    else ""
+                )
+                + (
+                    f"\nContract Address: {setup['contract_address']}"
+                    if setup["contract_address"] is not None
+                    else ""
+                )
+                + (
+                    f"\nTrigger Point: {setup['trigger_point']}"
+                    if setup["trigger_point"] is not None
+                    else ""
+                )
+                + (
+                    f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}"
+                    if setup["balance"] is not None
+                    else ""
+                )
             )
     # Add the last row if it has any buttons
     if row:
@@ -318,12 +397,13 @@ Blockchain: {setup["blockchain"]}"""
     else:
         cancel_text = "Cancel"
 
-    buttons.append([InlineKeyboardButton(cancel_text, callback_data="remove_wallet_menu")])
+    buttons.append(
+        [InlineKeyboardButton(cancel_text, callback_data="remove_wallet_menu")]
+    )
     reply_markup = InlineKeyboardMarkup(buttons)
     formatted_setups = "\n".join(alerts_to_display)
-    
-    return reply_markup, formatted_setups
 
+    return reply_markup, formatted_setups
 
 
 async def untrack_menu(update, context):
@@ -342,8 +422,13 @@ async def untrack_menu(update, context):
         # Generate buttons for each wallet
         for wallet in wallets_data:
             # Add button to current row
-            row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"untrack_wallet_{wallet['wallet_address']}"))
-            
+            row.append(
+                InlineKeyboardButton(
+                    wallet["wallet_name"],
+                    callback_data=f"untrack_wallet_{wallet['wallet_address']}",
+                )
+            )
+
             # If row is full (2 buttons), add it to buttons and start a new row
             if len(row) == 2:
                 buttons.append(row)
@@ -373,7 +458,7 @@ async def handle_untrack_wallet_selection(update, context):
     language = await get_language_for_chat_id(chat_id)
     query = update.callback_query
     wallet_address = query.data.split("_")[2]  # Extract wallet address
-    context.user_data['wallet_address_delete'] = wallet_address
+    context.user_data["wallet_address_delete"] = wallet_address
 
     # Fetch all setups associated with the selected wallet
     setups = await fetch_setup_wallet(wallet_address, chat_id)
@@ -382,7 +467,9 @@ async def handle_untrack_wallet_selection(update, context):
     alert_choice_2 = await setup_to_delete_2(language)
 
     if setups.data:
-        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(setups, language, alert)
+        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(
+            setups, language, alert
+        )
 
         await query.answer()
         await query.edit_message_text(
@@ -399,6 +486,7 @@ async def handle_untrack_wallet_selection(update, context):
         )
         return None
 
+
 async def delete_alert(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     chat_id = update.effective_chat.id
@@ -407,7 +495,7 @@ async def delete_alert(update, context):
     await remove_setup_from_db(setup_id)
 
     # Fetch setups associated with the wallet again
-    wallet_address = context.user_data['wallet_address_delete']
+    wallet_address = context.user_data["wallet_address_delete"]
     setups = await fetch_setup_wallet(wallet_address, chat_id)
 
     alert = await alert_text(language)
@@ -415,7 +503,9 @@ async def delete_alert(update, context):
     alert_choice_2 = await setup_to_delete_2(language)
 
     if setups.data:
-        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(setups, language, alert)
+        reply_markup, formatted_setups = await generate_setup_buttons_and_alerts(
+            setups, language, alert
+        )
 
         await query.edit_message_text(
             text=f"{alert_choice_1}\n\n{formatted_setups}\n\n{alert_choice_2}",
@@ -423,8 +513,10 @@ async def delete_alert(update, context):
         )
     else:
         await query.edit_message_text(
-            text=await setup_deletion_success(language),  # or any other appropriate message
-            reply_markup=await back_to_remove_wallet(language)
+            text=await setup_deletion_success(
+                language
+            ),  # or any other appropriate message
+            reply_markup=await back_to_remove_wallet(language),
         )
 
 
@@ -433,34 +525,36 @@ async def delete_all(update, context):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-            text = await remove_all_data(language),
-            reply_markup=await remove_all_data_keyboard(language),
-        )
-    
+        text=await remove_all_data(language),
+        reply_markup=await remove_all_data_keyboard(language),
+    )
+
+
 async def handle_deletion_delete_all(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     chat_id = update.effective_chat.id
     query = update.callback_query
     user_response = query.data
-    if user_response == 'yes_delete':
+    if user_response == "yes_delete":
         await remove_all_from_db(chat_id)
         await query.edit_message_text(
             text=await all_data_removed(language),
             reply_markup=await back_to_to_main_keyboard(language),
         )
-    elif user_response == 'no_delete':
+    elif user_response == "no_delete":
         # User canceled deletion, you can handle this according to your needs
         await query.answer("Deletion canceled.")
         await query.message.delete()
         await context.bot.send_message(
             chat_id=query.message.chat.id,
             text=await main_menu_message(context.user_data["name"], language),
-            reply_markup=await main_menu_keyboard(language)
+            reply_markup=await main_menu_keyboard(language),
         )
     else:
         # Handle unexpected user response
         await query.answer("Invalid response. Please use the provided buttons.")
-    
+
+
 ############################ Add Track #########################################
 """
 TODO:
@@ -469,6 +563,7 @@ TODO:
 """
 
 # STEP 1 : Handle blockchain selection
+
 
 async def add_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -481,63 +576,80 @@ async def add_wallet(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
+
 subscription_allowed_alerts = {
-        "Free": 5,  
-        "Premium": 20,  
-    }
+    "Free": 5,
+    "Premium": 20,
+}
+
 
 async def track_sub_menu_1(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
     context.user_data["chat_id"] = query.message.chat_id
-    
+
     # Fetch wallets associated with the user from the database
     user_wallets = await fetch_wallets_user(context.user_data["chat_id"])
 
     user_setups = await fetch_setups_user(context.user_data["chat_id"])
 
     user = fetch_user_data(update.effective_chat.id)
-    user_subscription = user[0]["subscription"]
-    end_date_of_subscription = user[0]["end_subscription"]
-    if end_date_of_subscription is not None:
-        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+    user_slots = user[0]["slots"]
+    print(user_setups.count)
+    print(user_slots)
 
+    if user_setups.count < user_slots:
+        if user_wallets.count > 0:
+            # User has existing wallets, display them in a menu
+            wallets_data = sorted(
+                user_wallets.data, key=lambda x: x["wallet_name"].lower()
+            )
+            buttons = []
 
-    now = datetime.now(timezone.utc)
+            # Generate buttons two by two
+            for i in range(0, len(wallets_data), 2):
+                row = []
+                for j in range(2):
+                    if i + j < len(wallets_data):
+                        wallet = wallets_data[i + j]
+                        row.append(
+                            InlineKeyboardButton(
+                                wallet["wallet_name"],
+                                callback_data=f"add_wallet_{wallet['wallet_address']}",
+                            )
+                        )
+                buttons.append(row)
 
-    allowed_subscriptions =  subscription_allowed_alerts.get(user_subscription, 5)
+            buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
 
-    if  user_setups.count < allowed_subscriptions:
-        if end_date_of_subscription is None or now < end_date_of_subscription:
-            if user_wallets.count > 0:
-                # User has existing wallets, display them in a menu
-                wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower()) 
-                buttons = []
+            reply_markup = InlineKeyboardMarkup(buttons)
 
-                # Generate buttons two by two
-                for i in range(0, len(wallets_data), 2):
-                    row = []
-                    for j in range(2):
-                        if i + j < len(wallets_data):
-                            wallet = wallets_data[i + j]
-                            row.append(InlineKeyboardButton(wallet["wallet_name"], callback_data=f"add_wallet_{wallet['wallet_address']}"))
-                    buttons.append(row)
-
-                buttons.append([InlineKeyboardButton("➕", callback_data="add_new_wallet")])
-
-                reply_markup = InlineKeyboardMarkup(buttons)
-
-                await query.answer()
-                await context.bot.send_message(chat_id=update.effective_chat.id,text=await wallets_found_track(language), reply_markup=reply_markup)
-            else:
-                # If user doesn't have any wallets, prompt them to add a new wallet
-                await query.answer()
-                await context.bot.send_message(chat_id=update.effective_chat.id,text = await blockchain_choice_message(language), reply_markup=await blockchain_keyboard())
+            await query.answer()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=await wallets_found_track(language),
+                reply_markup=reply_markup,
+            )
+        else:
+            # If user doesn't have any wallets, prompt them to add a new wallet
+            await query.answer()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=await blockchain_choice_message(language),
+                reply_markup=await blockchain_keyboard(),
+            )
     else:
-        message = await context.bot.send_message(chat_id=update.effective_chat.id,text = await too_many_setups(language))
+        message = await context.bot.send_message(
+            chat_id=update.effective_chat.id, text=await too_many_setups(language)
+        )
 
         # Use ensure_future to asynchronously delete the message after a delay
-        asyncio.ensure_future(delete_message_after_delay(context.bot, update.effective_chat.id, message.message_id, delay=10))
+        asyncio.ensure_future(
+            delete_message_after_delay(
+                context.bot, update.effective_chat.id, message.message_id, delay=10
+            )
+        )
+
 
 async def handle_wallet_selection_for_add(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -565,6 +677,7 @@ async def handle_wallet_selection_for_add(update, context):
         reply_markup=await blockchain_keyboard(),
     )
 
+
 async def blockchain_selection(update, context):
     query = update.callback_query
     selected_blockchain = str(
@@ -573,11 +686,12 @@ async def blockchain_selection(update, context):
     context.user_data["blockchain"] = selected_blockchain
     # Remember the selected blockchain or perform any other action
     await query.answer(text=f"You selected {selected_blockchain}")
-    
+
     if "wallet_address" in context.user_data:
         await naming_wallet_selection(update, context)
     else:
         await prompt_wallet_address_input(update, context, selected_blockchain)
+
 
 async def prompt_wallet_address_input(update, context, selected_blockchain):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -587,8 +701,12 @@ async def prompt_wallet_address_input(update, context, selected_blockchain):
         chat_id=update.callback_query.message.chat_id, text=text
     )
 
+
 # STEP 2 : Handle wallet address input
 async def handle_messages(update, context):
+    if update.message.text.startswith("/broadcast"):
+        # Optionally, you can ignore the message or handle it differently
+        return  # Ignore broadcast messages so they don't interfere with other logic
     language = await get_language_for_chat_id(update.effective_chat.id)
     if context.user_data.get("is_entering_wallet_name", False):
         await handle_wallet_name(update, context)
@@ -596,6 +714,8 @@ async def handle_messages(update, context):
         await handle_trigger_point(update, context)
     elif context.user_data.get("is_entering_contract_address", False):
         await handle_contract_address(update, context)
+    elif context.user_data.get("is_entering_slots", False):
+        await handle_slot_input(update, context)
     elif "blockchain" in context.user_data:
         # Only proceed with handling wallet address if blockchain key is present
         await handle_wallet_address(update, context)
@@ -603,19 +723,17 @@ async def handle_messages(update, context):
         # Handle other cases or send a message informing the user
         message = await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text= await use_buttons(language),
+            text=await use_buttons(language),
         )
 
         user_input_message_id = update.message.message_id
         # Delete the message after x seconds (e.g., 10 seconds)
         await asyncio.sleep(3)
         await context.bot.delete_message(
-            chat_id=update.effective_chat.id,
-            message_id=message.message_id
+            chat_id=update.effective_chat.id, message_id=message.message_id
         )
         await context.bot.delete_message(
-            chat_id=update.effective_chat.id,
-            message_id=user_input_message_id
+            chat_id=update.effective_chat.id, message_id=user_input_message_id
         )
 
 
@@ -639,6 +757,7 @@ async def naming_wallet_selection(update, context):
             context.user_data["wallet_name"] = "None"
             await select_token_symbol(update, context)
 
+
 async def handle_wallet_address(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     wallet_address = update.message.text
@@ -658,6 +777,7 @@ async def handle_wallet_address(update, context):
             text=await wallet_address_error(language),
         )
 
+
 async def handle_wallet_name(update, context):
     wallet_name = update.message.text
     context.user_data["wallet_name"] = wallet_name
@@ -665,6 +785,7 @@ async def handle_wallet_name(update, context):
     context.user_data.pop(
         "is_entering_wallet_name", None
     )  # Remove the key if it exists
+
 
 # STEP 4:
 async def select_token_symbol(update, context):
@@ -682,6 +803,7 @@ async def select_token_symbol(update, context):
         text=await token_symbol_choice(language),
         reply_markup=reply_markup,
     )
+
 
 async def handle_selected_token(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -713,10 +835,7 @@ async def handle_selected_token(update, context):
 
             selected_blockchain = selected_blockchain.upper()
             # Check if the selected blockchain is Theta and the selected token is "Stake Watch"
-            if (
-                selected_blockchain == "THETA"
-                and selected_symbol == "Stake Watch"
-            ):
+            if selected_blockchain == "THETA" and selected_symbol == "Stake Watch":
                 await context.bot.send_message(
                     chat_id=update.callback_query.message.chat_id,
                     text=await stake_message(language),
@@ -728,6 +847,7 @@ async def handle_selected_token(update, context):
                 await prompt_trigger_point(update, context)
         else:
             await query.answer("Invalid selection")
+
 
 async def handle_contract_address(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -749,6 +869,7 @@ async def handle_contract_address(update, context):
             text=await contract_address_error(language),
         )
 
+
 # STEP 6: TRIGGER POINT
 async def prompt_trigger_point(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -762,6 +883,7 @@ async def prompt_trigger_point(update, context):
         context.user_data["is_entering_trigger_point"] = True
     else:
         await prompt_tracked_wallet(update, context)
+
 
 async def handle_trigger_point(update, context):
     trigger_point = update.message.text
@@ -800,8 +922,9 @@ async def handle_trigger_point(update, context):
     # Prompt the user with the saved setup
     await prompt_tracked_wallet(update, context)
 
+
 # COMPLETED:
-#TODO : Fetch the initial balance and add it to the setup
+# TODO : Fetch the initial balance and add it to the setup
 async def prompt_tracked_wallet(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     blockchain = context.user_data.get("blockchain").upper()
@@ -811,7 +934,9 @@ async def prompt_tracked_wallet(update, context):
     contract_address = context.user_data.get("contract_address")
     trigger_point = context.user_data.get("trigger_point")
     if symbol != "Stake Watch":
-        balance = fetch_wallet_balance(blockchain, symbol, wallet_address, contract_address)
+        balance = fetch_wallet_balance(
+            blockchain, symbol, wallet_address, contract_address
+        )
         if balance != None:
             balance = round(balance, 2)
         stake = None
@@ -822,9 +947,13 @@ async def prompt_tracked_wallet(update, context):
         balance = None
 
     if symbol is None:
-        #TODO: Check si le contract_address est dans la db, sinon fetch depuis l'API et ajouter à la DB!
+        # TODO: Check si le contract_address est dans la db, sinon fetch depuis l'API et ajouter à la DB!
         existing_symbol = (
-        supabase.table("Contracts").select("*").eq("contract_address", contract_address).execute())
+            supabase.table("Contracts")
+            .select("*")
+            .eq("contract_address", contract_address)
+            .execute()
+        )
         if not existing_symbol.data:
             symbol, decimal = fetch_data_contract(contract_address)
             print("Fetching data for new contract...")
@@ -853,7 +982,9 @@ async def prompt_tracked_wallet(update, context):
         .execute()
     )
     count = await fetch_wallets_user(context.user_data["chat_id"])
-    logger.info (f"User {context.user_data["chat_id"]} has {count.count} wallets in the db")
+    logger.info(
+        f"User {context.user_data["chat_id"]} has {count.count} wallets in the db"
+    )
 
     if not existing_wallets.data:
         # Wallet does not exist, insert new record
@@ -889,9 +1020,10 @@ async def prompt_tracked_wallet(update, context):
         .execute()
     )
 
-
     count = await fetch_setups_user(context.user_data["chat_id"])
-    logger.info (f"User {context.user_data["chat_id"]} has {count.count} contracts in the db")
+    logger.info(
+        f"User {context.user_data["chat_id"]} has {count.count} contracts in the db"
+    )
     blockchain = blockchain.capitalize()
     wallet_address = wallet_address.lower()
     message = await tracked_wallet_setup_message(
@@ -914,7 +1046,9 @@ async def prompt_tracked_wallet(update, context):
 
     context.user_data.clear()
 
+
 ############################ Settings Menus ####################################
+
 
 async def settings_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
@@ -925,6 +1059,7 @@ async def settings_menu(update, context):
         reply_markup=await settings_menu_keyboard(language),
     )
 
+
 async def language_selection_menu(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -934,130 +1069,224 @@ async def language_selection_menu(update, context):
         reply_markup=await language_keyboard(language),
     )
 
+
 async def language_selection(update, context):
     chat_id = update.effective_chat.id
     query = update.callback_query
     selected_language = query.data
     supabase = connect_to_database()
     user_response = (
-            supabase.table("Users")
-            .update({"language": selected_language})
-            .eq("chat_id", chat_id)
-            .execute()
-        )
+        supabase.table("Users")
+        .update({"language": selected_language})
+        .eq("chat_id", chat_id)
+        .execute()
+    )
     context.user_data["language"] = selected_language
-    
+
     await query.answer()
     await query.edit_message_text(
         text=await language_selection_message(context.user_data["language"]),
         reply_markup=await language_keyboard(context.user_data["language"]),
     )
 
+
 ############################ Subscriptions ####################################
 
-async def subscription_menu(update, context):
-    chat_id = update.effective_chat.id
-    language = await get_language_for_chat_id(chat_id)
-    user = fetch_user_data(update.effective_chat.id)
-    user_subscription = user[0]["subscription"]
-    end_date_of_subscription = user[0]["end_subscription"]
-    if end_date_of_subscription:
-        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
-    else:
-        end_date_of_subscription = None
-    query = update.callback_query
-    await query.answer()
-    await query.edit_message_text(
-        text=await subscription_explanation(language,user_subscription,end_date_of_subscription),
-        reply_markup=await subscription_menu_from_menus(language),
-    )
 
-async def subscription_callback(update, context):
-    query = update.callback_query
-    await query.answer()
-    await send_subscription_invoice(update, context)
+# async def subscription_menu(update, context):
+#     chat_id = update.effective_chat.id
+#     language = await get_language_for_chat_id(chat_id)
+#     user = fetch_user_data(update.effective_chat.id)
+#     user_subscription = user[0]["subscription"]
+#     end_date_of_subscription = user[0]["end_subscription"]
+#     if end_date_of_subscription:
+#         end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+#     else:
+#         end_date_of_subscription = None
+#     query = update.callback_query
+#     await query.answer()
+#     await query.edit_message_text(
+#         text=await subscription_explanation(
+#             language, user_subscription, end_date_of_subscription
+#         ),
+#         reply_markup=await subscription_menu_from_menus(language),
+#     )
 
 
-async def send_subscription_invoice(
+# Pre-checkout handler to verify the invoice
+async def precheckout_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Sends an invoice without shipping-payment."""
-    query = update.callback_query
-    chat_id = query.message.chat_id
-    language = await get_language_for_chat_id(chat_id)
-
-    if language == "fr":
-        title = "Abonnement de 12 mois Premium."
-        description = "Accédez à un abonnement Premium de 12 mois. Cela vous permet d'obtenir jusqu'à 20 alertes. Il n'est pas renouvelé automatiquement chaque année."
-    elif language == "es":
-        title = "Suscripción de 12 meses de Premium."
-        description = "Obtenga acceso a una suscripción Premium durante 12 meses. Esto le permite recibir hasta 20 alertas. No se renueva automáticamente cada año."
-    else:  # Default to English
-        title = "Subscription for 12 months of Premium."
-        description = "Get access to a Premium subscription for 12 months. This allows you to get up to 20 alerts. It is not renewed automatically each year."
-
-    photo_url = "https://i.ibb.co/HBvGRZq/Untitled-Design.png"
-    photo_height = "1024"
-    photo_width = "1024"
-    # select a payload just for you to recognize it's the donation from your bot
-    payload = "Custom-Payload"
-    start_parameter = "start"
-    # In order to get a provider_token see https://core.telegram.org/bots/payments#getting-a-token
-    currency = "EUR"
-    # price in dollars
-    price = 50
-    # price * 100 so as to include 2 decimal points
-    prices = [LabeledPrice("Test", price * 100)]
-
-    # optionally pass need_name=True, need_phone_number=True,
-    # need_email=True, need_shipping_address=True, is_flexible=True
-    await context.bot.send_invoice(
-        chat_id, title, description, payload, PAYMENT_PROVIDER_TOKEN, currency, prices, start_parameter, photo_url, photo_height=photo_height, photo_width=photo_width,
-    )
-
-
-# after (optional) shipping, it's the pre-checkout
-async def precheckout_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Answers the PreQecheckoutQuery"""
+    """Answers the PreCheckoutQuery"""
     query = update.pre_checkout_query
-    # check the payload, is this from your bot?
     if query.invoice_payload != "Custom-Payload":
-        # answer False pre_checkout_query
         await query.answer(ok=False, error_message="Something went wrong...")
     else:
         await query.answer(ok=True)
 
 
-# finally, after contacting the payment provider...
-async def successful_payment_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+DEFAULT_SLOT_COUNT = 1
+
+
+# Successful payment callback
+async def successful_payment_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Confirms the successful payment."""
     chat_id = update.message.chat_id
     language = await get_language_for_chat_id(chat_id)
-    now = datetime.now()
-    year = timedelta(days=365)
+    slot_count = int(context.user_data.get("slot_count", DEFAULT_SLOT_COUNT))
 
     supabase = connect_to_database()
 
-    # Fetch the current subscription end date
-    response = supabase.table("Users").select("end_subscription").eq("chat_id", chat_id).execute()
-    current_subscription = response.data[0] if response.data else None
-    end_date_of_subscription = current_subscription["end_subscription"] if current_subscription else None
+    # Retrieve the current slot count from the database
+    user_data = (
+        supabase.table("Users")
+        .select("slots")  # Assuming "slots" holds the current count
+        .eq("chat_id", chat_id)
+        .execute()
+    )
 
-    if end_date_of_subscription:
-        end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
-        new_end_date = end_date_of_subscription + year
-        subscription_message = await subscription_succesfull_more_time(language, new_end_date)
+    # Check if user data exists
+    if user_data.data:
+        current_slots = user_data.data[0][
+            "slots"
+        ]  # Assuming slots is stored as an integer
+        new_total_slots = current_slots + slot_count  # Calculate new total slots
+
+        # Update the database with the new slot count
+        update_data = (
+            supabase.table("Users")
+            .update({"slots": new_total_slots})
+            .eq("chat_id", chat_id)
+            .execute()
+        )
+
+        await update.message.reply_text(
+            text=await slots_successfull_payment(language, new_total_slots),
+            reply_markup=await back_to_to_main_keyboard(language),
+        )
     else:
-        new_end_date = now + year
-        subscription_message = await subscription_succesfull_first_time(language, new_end_date)
+        await update.message.reply_text("User not found in the database.")
 
-    now_str = now.isoformat()
-    new_end_date_str = new_end_date.isoformat()
 
-    data = supabase.table("Users").update({"subscription": "Premium","start_subscription":now_str, "end_subscription": new_end_date_str}).eq("chat_id", chat_id).execute()
+# # finally, after contacting the payment provider...
+# async def successful_payment_callback(
+#     update: Update, context: ContextTypes.DEFAULT_TYPE
+# ) -> None:
+#     """Confirms the successful payment."""
+#     chat_id = update.message.chat_id
+#     language = await get_language_for_chat_id(chat_id)
+#     now = datetime.now()
+#     year = timedelta(days=365)
 
-    # do something after successfully receiving payment?
-    await update.message.reply_text(text = subscription_message, reply_markup=await back_to_to_main_keyboard(language))
+#     supabase = connect_to_database()
+
+#     # Fetch the current subscription end date
+#     response = (
+#         supabase.table("Users")
+#         .select("end_subscription")
+#         .eq("chat_id", chat_id)
+#         .execute()
+#     )
+#     current_subscription = response.data[0] if response.data else None
+#     end_date_of_subscription = (
+#         current_subscription["end_subscription"] if current_subscription else None
+#     )
+
+#     if end_date_of_subscription:
+#         end_date_of_subscription = datetime.fromisoformat(end_date_of_subscription)
+#         new_end_date = end_date_of_subscription + year
+#         subscription_message = await subscription_succesfull_more_time(
+#             language, new_end_date
+#         )
+#     else:
+#         new_end_date = now + year
+#         subscription_message = await subscription_succesfull_first_time(
+#             language, new_end_date
+#         )
+
+#     now_str = now.isoformat()
+#     new_end_date_str = new_end_date.isoformat()
+
+#     data = (
+#         supabase.table("Users")
+#         .update(
+#             {
+#                 "subscription": "Premium",
+#                 "start_subscription": now_str,
+#                 "end_subscription": new_end_date_str,
+#             }
+#         )
+#         .eq("chat_id", chat_id)
+#         .execute()
+#     )
+
+#     # do something after successfully receiving payment?
+#     await update.message.reply_text(
+#         text=subscription_message, reply_markup=await back_to_to_main_keyboard(language)
+#     )
+
+
+async def send_slot_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Asks the user how many slots they want to buy."""
+    query = update.callback_query
+
+    user = fetch_user_data(update.effective_chat.id)
+    user_slots = user[0]["slots"]
+
+    # Print the received callback query for debugging
+    print(
+        f"Received callback query: {query.data}"
+    )  # Print the data of the callback query
+    print(f"Chat ID: {query.message.chat.id}")  # Print the chat ID
+
+    # Acknowledge the callback query
+    await query.answer()
+
+    # Check if the query is valid
+    if query.data == "slots":
+        chat_id = query.message.chat.id
+        language = await get_language_for_chat_id(chat_id)
+
+        # Send a message asking for the number of slots
+        await context.bot.send_message(
+            chat_id,
+            text=await slots_message_explanation(language, user_slots),
+        )
+        context.user_data["is_entering_slots"] = True
+    else:
+        print("Callback query does not match the expected pattern.")
+
+
+async def handle_slot_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles the user's input for the number of slots."""
+    chat_id = update.effective_chat.id
+    language = await get_language_for_chat_id(chat_id)
+    user_input = update.message.text
+
+    # Validate if the input is an integer
+    if user_input.isdigit():
+        slot_count = int(user_input)
+        if slot_count > 0:  # Ensure the number is positive
+            context.user_data["slot_count"] = slot_count  # Store the count
+            # Here you can proceed with further actions, e.g., sending an invoice
+            await send_invoice(update, context, slot_count)
+            context.user_data.pop("is_entering_slots", None)
+        else:
+            await context.bot.send_message(
+                chat_id,
+                "Please enter a positive number.",
+                reply_markup=ForceReply(selective=True),
+            )
+    else:
+        await context.bot.send_message(
+            chat_id,
+            "Invalid input. Please enter a valid number of slots:",
+            reply_markup=ForceReply(selective=True),
+        )
 
 
 if __name__ == "__main__":
@@ -1072,63 +1301,64 @@ if __name__ == "__main__":
     application.add_handler(CallbackQueryHandler(main_menu, pattern="main"))
     application.add_handler(CallbackQueryHandler(help, pattern="help_menu"))
     application.add_handler(CallbackQueryHandler(show_wallets, pattern="list_wallets"))
-    application.add_handler(CallbackQueryHandler(untrack_menu, pattern="remove_wallet_menu"))
-    application.add_handler(CallbackQueryHandler(delete_all, pattern="delete_all"))
-    application.add_handler(CallbackQueryHandler(handle_deletion_delete_all, pattern=r"^(yes_delete|no_delete)$"))
     application.add_handler(
-    CallbackQueryHandler(handle_wallet_selection, pattern=r"^wallet_")
-)
+        CallbackQueryHandler(untrack_menu, pattern="remove_wallet_menu")
+    )
+    application.add_handler(CallbackQueryHandler(delete_all, pattern="delete_all"))
+    application.add_handler(
+        CallbackQueryHandler(
+            handle_deletion_delete_all, pattern=r"^(yes_delete|no_delete)$"
+        )
+    )
+    application.add_handler(
+        CallbackQueryHandler(handle_wallet_selection, pattern=r"^wallet_")
+    )
 
     ############################ Delete Section ################################
 
     application.add_handler(
-    CallbackQueryHandler(handle_untrack_wallet_selection, pattern=r"^untrack_wallet_")
-)
+        CallbackQueryHandler(
+            handle_untrack_wallet_selection, pattern=r"^untrack_wallet_"
+        )
+    )
     application.add_handler(
-    CallbackQueryHandler(delete_alert, pattern=r"^delete_setup_\d+$")
-)
+        CallbackQueryHandler(delete_alert, pattern=r"^delete_setup_\d+$")
+    )
 
     ############################ Add Track Handlers ############################
     application.add_handler(
         CallbackQueryHandler(track_sub_menu_1, pattern="track_menu")
     )
-    application.add_handler(
-        CallbackQueryHandler(add_wallet, pattern="add_new_wallet")
-    )
+    application.add_handler(CallbackQueryHandler(add_wallet, pattern="add_new_wallet"))
     application.add_handler(
         CallbackQueryHandler(blockchain_selection, pattern=r"^(theta|bsc|eth)$")
     )
     application.add_handler(
-    CallbackQueryHandler(handle_wallet_selection_for_add, pattern=r"add_wallet_")
-)
+        CallbackQueryHandler(handle_wallet_selection_for_add, pattern=r"add_wallet_")
+    )
 
     ############################ Setting Handlers ##############################
     application.add_handler(
         CallbackQueryHandler(settings_menu, pattern="settings_menu")
     )
-    application.add_handler(
-        CallbackQueryHandler(subscription_menu, pattern="subscriptions_menu")
-    )
-    
+
     application.add_handler(
         CallbackQueryHandler(language_selection_menu, pattern="language_menu")
     )
     application.add_handler(
         CallbackQueryHandler(language_selection, pattern=r"^(en|es|fr)$")
     )
-    application.add_handler(
-        CallbackQueryHandler(handle_privacy, pattern="privacy")
-    )
-    application.add_handler(
-        CallbackQueryHandler(handle_donation, pattern="donation")
-    )
+    application.add_handler(CallbackQueryHandler(handle_privacy, pattern="privacy"))
+    application.add_handler(CallbackQueryHandler(handle_donation, pattern="donation"))
     application.add_handler(
         CallbackQueryHandler(handle_data_collection, pattern="data_collection")
     )
-    application.add_handler(
-        CallbackQueryHandler(subscription_callback, pattern="subscribe")
-    )
+    # application.add_handler(
+    #     CallbackQueryHandler(subscription_callback, pattern="subscribe")
+    # )
 
+    ############################ SLOT SYSTEM HANDLERS ############################
+    application.add_handler(CallbackQueryHandler(send_slot_selection, pattern="slots"))
 
     ############################ Naming Wallet Handlers #########################################
     application.add_handler(
@@ -1148,6 +1378,7 @@ if __name__ == "__main__":
         MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback)
     )
 
+    application.add_handler(CommandHandler("broadcast", broadcast_message_test))
 
     application.add_handler(MessageHandler(filters.Text(), handle_messages))
 
