@@ -34,7 +34,7 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         for user in tqdm(users.data, desc="Sending messages", unit="user"):
             chat_id = user["chat_id"]
             try:
-                await context.bot.send_message(chat_id, message)
+                await context.bot.send_message(chat_id, message, parse_mode="Markdown")
             except Exception as e:
                 print(f"Could not send message to {chat_id}: {e}")
 
@@ -46,14 +46,14 @@ async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def broadcast_message_test(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Send a photo with a message to all registered users."""
+    """Send a message to all registered users while maintaining formatting."""
     print(f"Broadcast command received from {update.effective_user.id}")
 
     if str(update.effective_user.id) != ADMIN_ID:
         await update.message.reply_text("You are not authorized to use this command.")
         return
 
-    # Extract the caption or message from the command
+    # Extract the message from the command
     message = update.message.text[len("/broadcast ") :].strip()
     if not message and not update.message.photo:
         await update.message.reply_text(
@@ -77,8 +77,9 @@ async def broadcast_message_test(
         ):
             try:
                 await context.bot.send_photo(
-                    chat_id=chat_id, photo=photo, caption=message or "Photo from admin"
+                    chat_id=chat_id, photo=photo, caption="Photo from admin"
                 )
+                await context.bot.send_message(chat_id, message, parse_mode="Markdown")
                 await context.bot.send_message(chat_id, "Photo and message sent.")
             except Exception as e:
                 print(f"Failed to send photo and message to {chat_id}: {e}")
@@ -90,7 +91,7 @@ async def broadcast_message_test(
         # If no photo, send the message only
         for chat_id in tqdm(user_chat_ids, desc="Sending messages", unit="user"):
             try:
-                await context.bot.send_message(chat_id, message)
+                await context.bot.send_message(chat_id, message, parse_mode="Markdown")
                 await context.bot.send_message(chat_id, "Message sent.")
             except Exception as e:
                 print(f"Failed to send message to {chat_id}: {e}")

@@ -1032,7 +1032,7 @@ async def prompt_tracked_wallet(update, context):
     )
     count = await fetch_wallets_user(context.user_data["chat_id"])
     logger.info(
-        f"User {context.user_data["chat_id"]} has {count.count} wallets in the db"
+        f"User {context.user_data['chat_id']} has {count.count} wallets in the db"
     )
 
     if not existing_wallets.data:
@@ -1048,9 +1048,9 @@ async def prompt_tracked_wallet(update, context):
             )
             .execute()
         )
-        logger.info(f"Wallet for {context.user_data["chat_id"]} added")
+        logger.info(f"Wallet for {context.user_data['chat_id']} added")
     else:
-        logger.info(f"Wallet of {context.user_data["chat_id"]} already exists")
+        logger.info(f"Wallet of {context.user_data['chat_id']} already exists")
 
     data = (
         supabase.table("Setups")
@@ -1071,7 +1071,7 @@ async def prompt_tracked_wallet(update, context):
 
     count = await fetch_setups_user(context.user_data["chat_id"])
     logger.info(
-        f"User {context.user_data["chat_id"]} has {count.count} contracts in the db"
+        f"User {context.user_data['chat_id']} has {count.count} contracts in the db"
     )
     blockchain = blockchain.capitalize()
     wallet_address = wallet_address.lower()
