@@ -190,9 +190,11 @@ async def settings_message(user_language: str):
         return "Please choose a setting you want to adjust:"
 
 
-async def slots_message_explanation(user_language: str, slots: int):
+async def slots_message_explanation(
+    user_language: str, slots: int, user_setups_count: int
+):
     if user_language == "fr":
-        return f"""Vous avez actuellement {slots} slots d'alerte disponibles.
+        return f"""Vous utilisez actuellement {user_setups_count} sur {slots} slots d'alerte disponibles.
 
 Vous pouvez acheter plus de slots et augmenter le nombre d'alertes que vous pouvez avoir.
 
@@ -201,7 +203,7 @@ Chaque slot coûte 2€ (achat unique) et durera éternellement.
 Combien de slots souhaitez-vous acheter ? Veuillez entrer un nombre !
 """
     elif user_language == "es":
-        return f"""Actualmente tienes {slots} espacios de alerta disponibles.
+        return f"""Actualmente estás usando {user_setups_count} de {slots} slots de alerta disponibles.
 
 Puedes comprar más espacios y aumentar el número de alertas que puedes tener.
 
@@ -209,7 +211,7 @@ Cada espacio cuesta 2€ (compra única) y durará para siempre.
 
 ¿Cuántos espacios quieres comprar? ¡Por favor, introduce un número!"""
     else:
-        return f"""You currently have {slots} alert slots available.
+        return f"""You are currently using {user_setups_count} out of {slots} alert slots available.
 
 You can buy more slots and increase the number of alerts you can have.
 
@@ -358,13 +360,17 @@ async def wallets_found_track(user_language: str):
 
 async def wallets_found(user_language: str):
     if user_language == "fr":
-        return "Vos portefeuilles suivis sont (cliquez sur l'un d'eux pour voir quels contrats sont suivis) :"
+        return """Voici vos portefeuilles suivis. Cliquez sur l'un d'eux pour voir les alertes rattachés.
+
+Si vous supprimez le portefeuille, toutes les alertes associées seront aussi supprimées."""
     elif user_language == "es":
-        return "Tus carteras seguidas son (haz clic en una para ver qué contrato está seguido) :"
+        return """Aquí están sus monederos rastreados. Haga clic en uno de ellos para ver las alertas asociadas.
+
+Si elimina el monedero, todas las alertas asociadas también se eliminarán."""
     else:
-        return (
-            "Your followed wallets are (click on one to see what contract is followed):"
-        )
+        return """Here are your tracked wallets. Click on one of them to see the associated alerts.
+
+If you delete the wallet, all associated alerts will also be deleted."""
 
 
 async def no_wallets_found(user_language: str):
@@ -440,6 +446,15 @@ async def all_data_removed(user_language):
         return f"Todos sus datos han sido borrados."
     else:
         return f"All of your data has been deleted."
+
+
+async def wallet_deletion_message(user_language):
+    if user_language == "fr":
+        return f"Le portefeuille et ses alertes ont été supprimés avec succès."
+    elif user_language == "es":
+        return f"El monedero y sus alertas han sido eliminados con éxito."
+    else:
+        return f"The wallet and its alerts have been successfully removed."
 
 
 async def setup_deletion_success(user_language):

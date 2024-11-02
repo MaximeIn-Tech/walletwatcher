@@ -234,21 +234,21 @@ async def settings_menu_keyboard(user_language: str) -> InlineKeyboardMarkup:
 
     english_options = [
         InlineKeyboardButton("🌏 Language", callback_data="language_menu"),
-        InlineKeyboardButton("💳 More wallets", callback_data="slots"),
+        InlineKeyboardButton("💳 More alerts", callback_data="slots"),
         InlineKeyboardButton("❌ Delete all data", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Main menu", callback_data="main"),
     ]
 
     french_options = [
         InlineKeyboardButton("🌏 Langue", callback_data="language_menu"),
-        InlineKeyboardButton("💳 Plus de portefeuilles", callback_data="slots"),
+        InlineKeyboardButton("💳 Plus d'alertes", callback_data="slots"),
         InlineKeyboardButton("❌ Supprimer mes données", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Menu principal", callback_data="main"),
     ]
 
     spanish_options = [
         InlineKeyboardButton("🌏 Idioma", callback_data="language_menu"),
-        InlineKeyboardButton("💳 Más billeteras", callback_data="slots"),
+        InlineKeyboardButton("💳 Más alertas", callback_data="slots"),
         InlineKeyboardButton("❌ Eliminar mis datos", callback_data="delete_all"),
         InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
     ]
@@ -483,6 +483,42 @@ async def subscription_menu_from_menus(user_language: str) -> InlineKeyboardMark
             InlineKeyboardButton("🔙", callback_data="settings_menu"),
             InlineKeyboardButton("🏠 Menú principal", callback_data="main"),
         ],
+    ]
+
+    if user_language == "fr":
+        buttons = french_options
+    elif user_language == "es":
+        buttons = spanish_options
+    else:
+        buttons = english_options
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+########### Slots Menus ##############
+
+
+async def menu_not_enough_slots(user_language: str) -> InlineKeyboardMarkup:
+
+    english_options = [
+        [
+            InlineKeyboardButton("💳 More alerts", callback_data="slots"),
+        ],
+        [InlineKeyboardButton("🏠 Main menu", callback_data="main")],
+    ]
+
+    french_options = [
+        [
+            InlineKeyboardButton("💳 Plus d'alertes", callback_data="slots"),
+        ],
+        [InlineKeyboardButton("🏠 Menu principal", callback_data="main")],
+    ]
+
+    spanish_options = [
+        [
+            InlineKeyboardButton("💳 Más alertas", callback_data="slots"),
+        ],
+        [InlineKeyboardButton("🏠 Menú principal", callback_data="main")],
     ]
 
     if user_language == "fr":

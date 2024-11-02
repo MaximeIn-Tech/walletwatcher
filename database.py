@@ -139,6 +139,30 @@ async def remove_all_from_db(chat_id):
         return None  # Return None in case of any errors
 
 
+async def remove_wallet_and_alerts_from_db(chat_id, wallet_address):
+    supabase = connect_to_database()
+    try:
+        # Delete the wallet associated with the specific chat_id and wallet_address
+        wallet_delete_response = (
+            supabase.table("Wallets")
+            .delete()
+            .eq("chat_id", chat_id)
+            .eq("wallet_address", wallet_address)
+            .execute()
+        )
+        # Delete the setups associated with the specific chat_id
+        setups_delete_response = (
+            supabase.table("Setups")
+            .delete()
+            .eq("chat_id", chat_id)
+            .eq("wallet_address", wallet_address)
+            .execute()
+        )
+    except Exception as e:
+        print("An error occurred:", e)
+        return None  # Return None in case of any errors
+
+
 def fetch_token_symbol_for_contract(blockchain, contract_address):
     supabase = connect_to_database()
     try:

@@ -218,6 +218,20 @@ async def handle_data_collection(update, context):
 ############################ Wallets Section #########################################
 
 
+async def get_remove_button_text(language):
+    # Dictionary for different translations of "Remove"
+    translations = {
+        "en": "❌ Remove",
+        "fr": "❌ Supprimer",
+        "es": "❌ Eliminar",
+        "de": "❌ Entfernen",
+        # Add other languages as needed
+    }
+    return translations.get(
+        language, "❌ Remove"
+    )  # Default to English if language not found
+
+
 async def show_wallets(update, context):
     language = await get_language_for_chat_id(update.effective_chat.id)
     query = update.callback_query
@@ -230,19 +244,20 @@ async def show_wallets(update, context):
         wallets_data = sorted(user_wallets.data, key=lambda x: x["wallet_name"].lower())
         buttons = []
 
-        # Generate buttons two by two
-        for i in range(0, len(wallets_data), 2):
-            row = []
-            for j in range(2):
-                if i + j < len(wallets_data):
-                    wallet = wallets_data[i + j]
-                    row.append(
-                        InlineKeyboardButton(
-                            wallet["wallet_name"],
-                            callback_data=f"wallet_{wallet['wallet_address']}",
-                        )
-                    )
-            buttons.append(row)
+        # Get the localized "Remove" text
+        remove_button_text = await get_remove_button_text(language)
+
+        # Generate buttons for each wallet and add a "Remove" button
+        for wallet in wallets_data:
+            wallet_button = InlineKeyboardButton(
+                wallet["wallet_name"],
+                callback_data=f"wallet_{wallet['wallet_address']}",
+            )
+            remove_button = InlineKeyboardButton(
+                remove_button_text,
+                callback_data=f"remove_wallet_{wallet['wallet_address']}",
+            )
+            buttons.append([wallet_button, remove_button])
 
         buttons.append([InlineKeyboardButton("🔙", callback_data="main_menu")])
 
@@ -259,6 +274,38 @@ async def show_wallets(update, context):
         await query.edit_message_text(
             text=await no_wallets_found(language),
             reply_markup=await back_to_to_main_keyboard(language),
+        )
+
+
+async def remove_wallet_callback(update, context):
+    query = update.callback_query
+    chat_id = query.message.chat_id
+    language = await get_language_for_chat_id(chat_id)
+    callback_data = query.data
+
+    # Extract the wallet address from the callback data
+    wallet_address = callback_data.split("_", 2)[-1]
+
+    # Verify if the wallet belongs to the user
+    user_wallets = await fetch_wallets_user(chat_id)
+    wallet_to_remove = next(
+        (w for w in user_wallets.data if w["wallet_address"] == wallet_address), None
+    )
+
+    if wallet_to_remove:
+        # Remove the wallet and associated alerts from the database
+        await remove_wallet_and_alerts_from_db(chat_id, wallet_address)
+
+        # Notify the user of the successful removal
+        await query.answer()
+        await query.edit_message_text(
+            text=await wallet_deletion_message(language),
+            reply_markup=await back_to_list_wallets(language),
+        )
+    else:
+        # Notify the user if the wallet was not found or doesn't belong to them
+        await query.answer(
+            text="Error: Wallet not found or unauthorized action.", show_alert=True
         )
 
 
@@ -640,13 +687,15 @@ async def track_sub_menu_1(update, context):
             )
     else:
         message = await context.bot.send_message(
-            chat_id=update.effective_chat.id, text=await too_many_setups(language)
+            chat_id=update.effective_chat.id,
+            text=await too_many_setups(language),
+            reply_markup=await menu_not_enough_slots(language),
         )
 
         # Use ensure_future to asynchronously delete the message after a delay
         asyncio.ensure_future(
             delete_message_after_delay(
-                context.bot, update.effective_chat.id, message.message_id, delay=10
+                context.bot, update.effective_chat.id, message.message_id, delay=30
             )
         )
 
@@ -1234,6 +1283,8 @@ async def send_slot_selection(
     """Asks the user how many slots they want to buy."""
     query = update.callback_query
 
+    user_setups = await fetch_setups_user(update.effective_chat.id)
+    user_setups_count = user_setups.count
     user = fetch_user_data(update.effective_chat.id)
     user_slots = user[0]["slots"]
 
@@ -1254,7 +1305,9 @@ async def send_slot_selection(
         # Send a message asking for the number of slots
         await context.bot.send_message(
             chat_id,
-            text=await slots_message_explanation(language, user_slots),
+            text=await slots_message_explanation(
+                language, user_slots, user_setups_count
+            ),
         )
         context.user_data["is_entering_slots"] = True
     else:
@@ -1323,6 +1376,9 @@ if __name__ == "__main__":
     )
     application.add_handler(
         CallbackQueryHandler(delete_alert, pattern=r"^delete_setup_\d+$")
+    )
+    application.add_handler(
+        CallbackQueryHandler(remove_wallet_callback, pattern=r"^remove_wallet_")
     )
 
     ############################ Add Track Handlers ############################
