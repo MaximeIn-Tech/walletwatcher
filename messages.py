@@ -198,7 +198,7 @@ async def slots_message_explanation(
 
 Vous pouvez acheter plus de slots et augmenter le nombre d'alertes que vous pouvez avoir.
 
-Chaque slot coûte 2€ (achat unique) et durera éternellement.
+Chaque slot coûte 100 étoiles Telegram, soit environ 2 $, (achat unique) et durera éternellement.
 
 Combien de slots souhaitez-vous acheter ? Veuillez entrer un nombre !
 """
@@ -207,7 +207,7 @@ Combien de slots souhaitez-vous acheter ? Veuillez entrer un nombre !
 
 Puedes comprar más espacios y aumentar el número de alertas que puedes tener.
 
-Cada espacio cuesta 2€ (compra única) y durará para siempre.
+Cada espacio cuesta 100 estrellas de Telegram, o alrededor de 2 $, (compra única) y durará para siempre.
 
 ¿Cuántos espacios quieres comprar? ¡Por favor, introduce un número!"""
     else:
@@ -215,7 +215,7 @@ Cada espacio cuesta 2€ (compra única) y durará para siempre.
 
 You can buy more slots and increase the number of alerts you can have.
 
-Each slot is 2€ (one time purchase) and will last you forever.
+Each slot is 100 Telegram Stars, or around 2$, (one time purchase) and will last you forever.
 
 How many slots do you want to buy? Please enter a number!"""
 

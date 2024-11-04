@@ -75,27 +75,23 @@ async def send_invoice(
     chat_id = update.message.chat_id
     language = await get_language_for_chat_id(chat_id)
     """Sends an invoice based on the selected slot count."""
-    price_per_slot = 2  # Adjust price per slot as needed
+    price_per_slot = 1  # Adjust price per slot as needed
 
     if language == "fr":
-        title = "Achat de slots de portefeuilles à vie"
-        description = (
-            f"Achetez {slot_count} slot(s) de portefeuilles pour un accès à vie."
-        )
+        title = "Achat de slots d'alertes à vie"
+        description = f"Achetez {slot_count} slot(s) d'alertes pour un accès à vie."
     elif language == "es":
-        title = "Compra de slots de billeteras vitalicios"
-        description = (
-            f"Compra {slot_count} slot(s) de billetera para acceso de por vida."
-        )
+        title = "Compra de slots de alertas de por vida"
+        description = f"Compra {slot_count} slot(s) de alertas para acceso de por vida."
     else:  # Default to English
-        title = "Lifetime Wallets Slot Purchase"
-        description = f"Purchase {slot_count} wallets slot(s) for lifetime access."
+        title = "Lifetime Alerts Slot Purchase"
+        description = f"Purchase {slot_count} alerts slot(s) for lifetime access."
 
     photo_url = "https://i.ibb.co/HBvGRZq/Untitled-Design.png"
     photo_height = "1024"
     photo_width = "1024"
     # Generate the invoice details
-    currency = "EUR"
+    currency = "XTR"
     total_price = slot_count * price_per_slot * 100  # Multiplied by 100 for cents
     prices = [LabeledPrice(f"{slot_count} Slots", total_price)]
 
