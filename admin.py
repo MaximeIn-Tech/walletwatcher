@@ -10,6 +10,8 @@ from database import *
 load_dotenv()
 
 ADMIN_ID = os.getenv("ADMIN_ID")  # Replace with your actual admin ID
+TEST_ID_1 = os.getenv("TEST_ID_1")
+TEST_ID_2 = os.getenv("TEST_ID_2")
 
 
 async def broadcast_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -63,8 +65,8 @@ async def broadcast_message_test(
 
     # List of user chat IDs to broadcast the message to
     user_chat_ids = [
-        "1355080202",
-        "6269998887",
+        TEST_ID_1,
+        TEST_ID_2,
     ]  # Replace with actual chat IDs
 
     # If a photo is attached, send the photo with the caption
