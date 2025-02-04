@@ -9,6 +9,158 @@ from playwright.sync_api import sync_playwright
 from database import connect_to_database
 
 
+def scrap_ton_contracts():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+        data_list = []
+
+        # Navigate to the page
+        page.goto("https://ton.app/jettons")
+
+        # Scroll to the bottom of the page to load all content
+        previous_height = 0
+        while True:
+            # Scroll to the bottom
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+
+            # Wait for new content to load
+            page.wait_for_timeout(1000)  # Adjust timeout if needed
+
+            # Check if scrolling is complete
+            new_height = page.evaluate("document.body.scrollHeight")
+            if new_height == previous_height:
+                break
+            previous_height = new_height
+
+        # Extract all hrefs starting with "https://ton.app/jettons/"
+        links = page.query_selector_all("div a[href^='/jettons/']")
+        for link in links:
+            href = link.get_attribute("href")
+            if href:
+                data_list.append(href)
+
+        # Save the scraped links into a JSON file
+        with open("jettons_links.json", "w", encoding="utf-8") as json_file:
+            json.dump(data_list, json_file, ensure_ascii=False, indent=4)
+
+        # Print or return the scraped links
+        print(f"Total links scraped: {len(data_list)}")
+
+        # Close the browser
+        browser.close()
+
+    return data_list
+
+
+def jettons_contract(file_path):
+    # Load the JSON file
+    with open(file_path, "r", encoding="utf-8") as json_file:
+        links = json.load(json_file)
+
+    # Prepare the API base URL
+    base_url = "https://tonapi.io/v2/jettons/"
+
+    # List to store extracted data
+    extracted_data = []
+
+    # Iterate through each link with a loading bar
+    for link in tqdm.tqdm(links, desc="Processing jettons"):
+        # Extract the end part of the URL (e.g., "/jettons/{token}")
+        end_url = link.replace("https://ton.app", "")
+
+        # Construct the full API URL
+        url = f"{base_url}{end_url}"
+
+        # Make the API request
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an error if the request fails
+            data = response.json()  # Parse the JSON response
+            # Extract the required fields
+            contract_address = end_url
+            symbol = data["metadata"]["symbol"]
+            decimal = data["metadata"]["decimals"]
+
+            # Add the extracted data to the list
+            extracted_data.append(
+                {
+                    "contract_address": contract_address,
+                    "symbol": symbol,
+                    "decimal": decimal,
+                }
+            )
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error with {link}: {e}")
+
+        # Rate limit: 1 API call per second
+        time.sleep(1)
+
+    # Save the extracted data to a JSON file
+    with open("jettons_data.json", "w", encoding="utf-8") as output_file:
+        json.dump(extracted_data, output_file, ensure_ascii=False, indent=4)
+
+    print(f"Data saved to jettons_data.json")
+
+
+def jettons_contract_to_db(file_path):
+    # Load the JSON file
+    with open(file_path, "r", encoding="utf-8") as json_file:
+        jettons_data = json.load(json_file)
+
+    supabase = connect_to_database()
+
+    # Iterate through each token with a progress bar
+    for token in tqdm.tqdm(jettons_data, desc="Inserting into database"):
+        # Extract token details
+        contract_address = token.get("token_address")
+        print(contract_address)
+        symbol = token.get("token_symbol")
+        print(symbol)
+        decimal = token.get("decimal")
+
+        # Insert into Supabase
+        try:
+            # Check if the contract_address already exists
+            existing_contracts = (
+                supabase.table("Contracts")
+                .select("contract_address")
+                .eq("contract_address", contract_address)
+                .execute()
+            )
+
+            if existing_contracts.data:
+                print(
+                    f"{symbol} {contract_address} already exists in the table. Skipping."
+                )
+                continue  # Skip this entry if it already exists
+
+            data = (
+                supabase.table("Contracts")
+                .insert(
+                    {
+                        "blockchain": "SOL",
+                        "contract_address": contract_address,
+                        "token_symbol": symbol,
+                        "decimal": decimal,
+                    }
+                )
+                .execute()
+            )
+            print(f"{symbol} {contract_address} added to the table.")
+
+        except Exception as e:
+            print("An error occurred:", e)
+            return None  # Return None in case of any errors
+
+        except Exception as e:
+            print(f"Error inserting {contract_address}: {e}")
+
+        # Rate limit: 1 insertion per second
+        time.sleep(0.1)
+
+
 def scrape_bsc_contracts():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -169,10 +321,11 @@ def scrape_tokens():
 
 def scrape_bsc_single_contract():
     with sync_playwright() as p:
+        contract_address: str = 0x58538E6A46E07434D7E7375BC268D3CB839C0133
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
         page.goto(
-            "https://bscscan.com/token/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+            f"https://bscscan.com/token/0x58538E6A46E07434D7E7375BC268D3CB839C0133"
         )
         content = page.content()
 
@@ -271,8 +424,113 @@ def organize_json(json_file_path):
     return organized_data, len(organized_data)
 
 
+def scrape_sol_contracts():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+        data_list = []
+
+        # Iterate over pages
+        for page_number in range(1, 20):  # Assuming you want to scrape 5 pages
+            page.goto(f"https://solscan.io/leaderboard/token?page={page_number}")
+
+            # Wait for the specific <td> element to load
+            page.wait_for_selector(
+                "td.h-12.px-2.py-\\[10px\\].align-middle.text-\\[14px\\].leading-\\[24px\\].font-normal.text-neutral7.\\[\\&\\:has\\(\\[role\\=checkbox\\]\\)\\]\\:pr-0.border-b.first\\:pl-4.last\\:pr-4 a"
+            )
+
+            # Extract all hrefs from <a> tags inside <td> with the specified class
+            links = page.query_selector_all(
+                "td.h-12.px-2.py-\\[10px\\].align-middle.text-\\[14px\\].leading-\\[24px\\].font-normal.text-neutral7.\\[\\&\\:has\\(\\[role\\=checkbox\\]\\)\\]\\:pr-0.border-b.first\\:pl-4.last\\:pr-4 a"
+            )
+            print(links)
+            for link in links:
+                href = link.get_attribute("href")
+                if href:
+                    data_list.append(href)
+
+        # Save the scraped links into a JSON file
+        with open("tokens_links.json", "w", encoding="utf-8") as json_file:
+            json.dump(data_list, json_file, ensure_ascii=False, indent=4)
+
+        # Print or return the scraped links
+        print(f"Total links scraped: {len(data_list)}")
+
+        # Close the browser
+        browser.close()
+
+    return data_list
+
+
+def extract_token_info(token_address):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+
+        # Navigate to the token page
+        page.goto(f"https://solscan.io/token/{token_address}")
+
+        # Wait for the page to load fully
+        page.wait_for_load_state("networkidle")
+
+        # Extract the token name and symbol
+        token_name_element = page.query_selector(
+            "div.not-italic.font-normal.text-neutral7.text-\\[14px\\].leading-\\[24px\\].autoTruncate.block"
+        )
+        if token_name_element:
+            token_name = token_name_element.inner_text().strip()
+            # Extract the symbol from parentheses
+            if "(" in token_name and ")" in token_name:
+                token_symbol = token_name.split("(")[1].split(")")[0]
+            else:
+                token_symbol = None
+        else:
+            token_name = None
+            token_symbol = None
+
+        # Extract the decimal
+        decimal_element = page.query_selector("div:has-text('Decimals') + div")
+        if decimal_element:
+            decimal = decimal_element.inner_text().strip()
+        else:
+            decimal = None
+
+        # Close the browser
+        browser.close()
+
+        return {
+            "token_address": token_address,
+            "token_symbol": token_symbol,
+            "decimal": decimal,
+        }
+
+
 def main():
-    scrape_tokens()
+    # # Load token addresses from the JSON file
+    # with open("tokens_links.json", "r", encoding="utf-8") as json_file:
+    #     token_addresses = json.load(json_file)
+
+    # # Scrape token info for each address
+    # all_token_info = []
+    # for token_address in tqdm.tqdm(
+    #     token_addresses, desc="Scraping tokens", unit="token"
+    # ):
+    #     print(f"Scraping data for token: {token_address}")
+    #     try:
+    #         token_info = extract_token_info(token_address)
+    #         all_token_info.append(token_info)
+    #         print(f"Scraped data: {token_info}")
+    #     except Exception as e:
+    #         print(f"Failed to scrape data for token {token_address}: {e}")
+
+    # # Save all token info to a new JSON file
+    # with open("all_token_info.json", "w", encoding="utf-8") as json_file:
+    #     json.dump(all_token_info, json_file, ensure_ascii=False, indent=4)
+
+    # print("Scraping completed. Data saved to all_token_info.json.")
+    # jettons_contract_to_db("all_token_info.json")
+    print("scrapping")
+    scrape_bsc_single_contract()
 
 
 if __name__ == "__main__":

@@ -659,7 +659,7 @@ async def tracked_wallet_setup_message(
         if trigger_point is not None:
             message += f"Seuil de déclenchement : {trigger_point}\n"
         if balance is not None:
-            message += f"Votre solde actuel est : {balance} {symbol}"
+            message += f"Votre solde actuel est : {balance:,} {symbol}"
     elif language == "es":
         message = f"Configuración del monedero rastreado:\n\n"
         message += f"Nombre del monedero: {wallet_name}\n"
@@ -689,7 +689,7 @@ async def tracked_wallet_setup_message(
         if trigger_point is not None:
             message += f"Punto de activación: {trigger_point}\n"
         if balance is not None:
-            message += f"Tu saldo actual es: {balance} {symbol}"
+            message += f"Tu saldo actual es: {balance:,} {symbol}"
     else:  # English
         message = f"Tracked wallet setup:\n\n"
         message += f"Wallet Name: {wallet_name}\n"
@@ -719,7 +719,7 @@ async def tracked_wallet_setup_message(
         if trigger_point is not None:
             message += f"Trigger Point: {trigger_point}\n"
         if balance is not None:
-            message += f"Your current balance is : {balance} {symbol}"
+            message += f"Your current balance is : {balance:,} {symbol}"
 
     return message
 
@@ -759,7 +759,7 @@ def generate_formatted_setups(setups, alert, user_language):
                 )
             if setup["balance"] is not None:
                 formatted_setups += (
-                    f"\nSolde actuel: {setup['balance']} {setup['token_symbol']}"
+                    f"\nSolde actuel: {setup['balance']:,} {setup['token_symbol']}"
                 )
             formatted_setups += "\n\n"
         elif user_language == "es":
@@ -793,7 +793,7 @@ def generate_formatted_setups(setups, alert, user_language):
                 formatted_setups += f"\nPunto de Activación: {setup['trigger_point']}"
             if setup["balance"] is not None:
                 formatted_setups += (
-                    f"\nSaldo: {setup['balance']} {setup['token_symbol']}"
+                    f"\nSaldo: {setup['balance']:,} {setup['token_symbol']}"
                 )
             formatted_setups += "\n\n"
         # Add more language conditions as needed
@@ -827,7 +827,16 @@ def generate_formatted_setups(setups, alert, user_language):
                 formatted_setups += f"\nTrigger Point: {setup['trigger_point']}"
             if setup["balance"] is not None:
                 formatted_setups += (
-                    f"\nCurrent balance: {setup['balance']} {setup['token_symbol']}"
+                    f"\nCurrent balance: {setup['balance']:,} {setup['token_symbol']}"
                 )
             formatted_setups += "\n\n"
     return formatted_setups
+
+
+async def not_found_contract_address(user_language):
+    if user_language == "fr":
+        return f"Aucun jeton trouvé pour cette adresse. Veuillez essayer une autre ou contacter @TeschSherpa"
+    elif user_language == "es":
+        return f"No se encontró token para esta dirección. Por favor, intente otra o contacte a @TeschSherpa"
+    else:
+        return f"No token found for this address. Please try another one or contact @TeschSherpa"

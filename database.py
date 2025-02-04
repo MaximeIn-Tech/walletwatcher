@@ -3,12 +3,45 @@ NOTE : This file is here to handle all the database interaction.
 """
 
 import json
+import logging
 import os
+import time
+from logging.handlers import TimedRotatingFileHandler
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
 
 load_dotenv()
+
+# Configure logger
+logger = logging.getLogger(__name__)
+
+# Create a TimedRotatingFileHandler with date in filename
+handler = TimedRotatingFileHandler(
+    time.strftime("logs/database/database_log-%Y-%m-%d.log"),
+    when="midnight",
+    interval=1,
+    backupCount=7,
+    encoding="utf-8",
+)
+
+# Formatter for the log messages
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+# Apply formatter to the handler
+handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(handler)
+
+# Set the log level
+logger.setLevel(logging.INFO)
+
+# Set higher logging level for httpx to avoid all GET and POST requests being logged
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
+# Example of logging
+logger.info("Logging setup complete.")
 
 
 def connect_to_database():
@@ -43,7 +76,7 @@ async def get_language_for_chat_id(chat_id):
             return language
             return None  # Return None if no data found for the chat_id
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while fetching user's language:", e)
         return None  # Return None in case of any errors
 
 
@@ -61,7 +94,7 @@ async def fetch_wallets_user(chat_id):
             return wallet_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while fetching user's wallets:", e)
         return None  # Return None in case of any errors
 
 
@@ -79,7 +112,7 @@ async def fetch_wallet_address(wallet_address):
             return wallet_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while fetching user's wallet addresses:", e)
         return None  # Return None in case of any errors
 
 
@@ -97,7 +130,7 @@ async def fetch_setups_user(chat_id):
             return setup_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while fetching user's setups:", e)
         return None  # Return None in case of any errors
 
 
@@ -116,7 +149,7 @@ async def fetch_setup_wallet(wallet_address, chat_id):
             return setup_number
             return None  # Return None if no data found for the chat_id
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while fetching user's wallet setups:", e)
         return None  # Return None in case of any errors
 
 
@@ -125,7 +158,7 @@ async def remove_setup_from_db(setup_id):
     try:
         data = supabase.table("Setups").delete().eq("id", setup_id).execute()
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while removing user's setup:", e)
         return None  # Return None in case of any errors
 
 
@@ -135,7 +168,7 @@ async def remove_all_from_db(chat_id):
         data = supabase.table("Wallets").delete().eq("chat_id", chat_id).execute()
         data = supabase.table("Setups").delete().eq("chat_id", chat_id).execute()
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while removing all user's data:", e)
         return None  # Return None in case of any errors
 
 
@@ -159,7 +192,7 @@ async def remove_wallet_and_alerts_from_db(chat_id, wallet_address):
             .execute()
         )
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info("An error occurred while removing user's wallet and setups:", e)
         return None  # Return None in case of any errors
 
 
@@ -175,7 +208,10 @@ def fetch_token_symbol_for_contract(blockchain, contract_address):
         )
         return data.data[0]["token_symbol"]
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info(
+            f"An error occurred while fetching token symbol for {contract_address} on {blockchain} :",
+            e,
+        )
         return None  # Return None in case of any errors
 
 
@@ -191,7 +227,10 @@ def fetch_decimal_for_contract(blockchain, contract_address):
         )
         return data.data[0]["decimal"]
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info(
+            f"An error occurred while fetching decimal for {contract_address} on {blockchain} :",
+            e,
+        )
         return None  # Return None in case of any errors
 
 
@@ -207,7 +246,10 @@ def fetch_stake_for_wallet(wallet_address):
         )
         return stake_data.data[0]["stake_data"]
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info(
+            f"An error occurred while fetching user's stake :",
+            e,
+        )
         return None  # Return None in case of any errors
 
 
@@ -217,7 +259,10 @@ def fetch_user_data(chat_id):
         data = supabase.table("Users").select("*").eq("chat_id", chat_id).execute()
         return data.data
     except Exception as e:
-        print("An error occurred:", e)
+        logger.info(
+            f"An error occurred while fetching user's data :",
+            e,
+        )
         return None  # Return None in case of any errors
 
 

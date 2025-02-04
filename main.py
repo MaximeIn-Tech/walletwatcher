@@ -59,21 +59,25 @@ supabase = connect_to_database()
 BTC_WALLET_ADDRESS_PATTERN = r"^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$"
 THETA_WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
 BSC_WALLET_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
+SOLANA_WALLET_ADDRESS_PATTERN = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+TON_WALLET_ADDRESS_PATTERN = r"^[A-Za-z0-9_-]{40,64}$"
 
 BTC_CONTRACT_ADDRESS_PATTERN = None
 THETA_CONTRACT_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
 BSC_CONTRACT_ADDRESS_PATTERN = r"^0x[a-fA-F0-9]{40}$"
+SOLANA_CONTRACT_ADDRESS_PATTERN = r"^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+TON_CONTRACT_ADDRESS_PATTERN = r"^[A-Za-z0-9_-]{40,64}$"
 
 # Combine all wallet address patterns into a single pattern
 WALLET_ADDRESS_PATTERN = re.compile(
-    f"({'|'.join([BTC_WALLET_ADDRESS_PATTERN, THETA_WALLET_ADDRESS_PATTERN, BSC_WALLET_ADDRESS_PATTERN])})"
+    f"({'|'.join([THETA_WALLET_ADDRESS_PATTERN, BSC_WALLET_ADDRESS_PATTERN, SOLANA_WALLET_ADDRESS_PATTERN, TON_WALLET_ADDRESS_PATTERN])})"
 )
 
 CONTRACT_ADDRESS_PATTERN = r"^(0x)?[0-9a-fA-F]{40}$"
 
 # Combine all contract address patterns into a single pattern
 CONTRACT_ADDRESS_PATTERN = re.compile(
-    f"({'|'.join([THETA_CONTRACT_ADDRESS_PATTERN, BSC_CONTRACT_ADDRESS_PATTERN])})"
+    f"({'|'.join([THETA_CONTRACT_ADDRESS_PATTERN, BSC_CONTRACT_ADDRESS_PATTERN, SOLANA_CONTRACT_ADDRESS_PATTERN, TON_CONTRACT_ADDRESS_PATTERN])})"
 )
 
 TOKEN_SYMBOL_PATTERN = r"^[A-Za-z0-9]+$"
@@ -93,6 +97,8 @@ PREDEFINED_TOKENS = {
     ],
     "eth": [{"symbol": "ETH", "contract_address": None}],
     "bsc": [{"symbol": "BNB", "contract_address": None}],
+    "sol": [{"symbol": "SOL", "contract_address": None}],
+    "ton": [{"symbol": "TON", "contract_address": None}],
 }
 
 ############################ Utilities  #########################################
@@ -987,6 +993,7 @@ async def prompt_tracked_wallet(update, context):
             blockchain, symbol, wallet_address, contract_address
         )
         if balance != None:
+            print(balance)
             balance = round(balance, 2)
         stake = None
     else:
@@ -1004,21 +1011,20 @@ async def prompt_tracked_wallet(update, context):
             .execute()
         )
         if not existing_symbol.data:
-            symbol, decimal = fetch_data_contract(contract_address)
+            symbol, decimal = fetch_data_contract(blockchain, contract_address)
             print("Fetching data for new contract...")
-            print(symbol, decimal)
-            # data = (
-            #             supabase.table("Contracts")
-            #             .insert(
-            #                 {
-            #                     "blockchain": "THETA",
-            #                     "contract_address": contract_address,
-            #                     "token_symbol": symbol,
-            #                     "decimal": decimal,
-            #                 }
-            #             )
-            #             .execute()
-            # )
+            data = (
+                supabase.table("Contracts")
+                .insert(
+                    {
+                        "blockchain": blockchain,
+                        "contract_address": contract_address,
+                        "token_symbol": symbol,
+                        "decimal": decimal,
+                    }
+                )
+                .execute()
+            )
         else:
             symbol = fetch_token_symbol_for_contract(blockchain, contract_address)
 
@@ -1073,7 +1079,7 @@ async def prompt_tracked_wallet(update, context):
     logger.info(
         f"User {context.user_data['chat_id']} has {count.count} contracts in the db"
     )
-    blockchain = blockchain.capitalize()
+    blockchain = blockchain.upper()
     wallet_address = wallet_address.lower()
     message = await tracked_wallet_setup_message(
         wallet_name,
@@ -1387,7 +1393,7 @@ if __name__ == "__main__":
     )
     application.add_handler(CallbackQueryHandler(add_wallet, pattern="add_new_wallet"))
     application.add_handler(
-        CallbackQueryHandler(blockchain_selection, pattern=r"^(theta|bsc|eth)$")
+        CallbackQueryHandler(blockchain_selection, pattern=r"^(theta|bsc|eth|sol|ton)$")
     )
     application.add_handler(
         CallbackQueryHandler(handle_wallet_selection_for_add, pattern=r"add_wallet_")
@@ -1435,6 +1441,7 @@ if __name__ == "__main__":
     )
 
     application.add_handler(CommandHandler("broadcast", broadcast_message))
+    application.add_handler(CommandHandler("broadcast_test", broadcast_message_test))
 
     application.add_handler(MessageHandler(filters.Text(), handle_messages))
 

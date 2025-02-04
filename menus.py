@@ -367,10 +367,12 @@ async def blockchain_keyboard():
         InlineKeyboardButton("THETA", callback_data="theta"),
         InlineKeyboardButton("ETH", callback_data="eth"),
         InlineKeyboardButton("BSC", callback_data="bsc"),
+        InlineKeyboardButton("TON", callback_data="ton"),
+        InlineKeyboardButton("SOL", callback_data="sol"),
     ]
 
     # Maximum options per row
-    max_options_per_row = 1
+    max_options_per_row = 2
 
     # Divide options into rows
     keyboard = []
